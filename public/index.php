@@ -16,5 +16,5 @@ try {
     $router = require __DIR__ . '/../src/routes/routes.php';
     $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
 } catch (Throwable $e) {
-    Response::error('Erro interno no servidor.', 500);
+    Response::error($e->getMessage(), 500);
 }
