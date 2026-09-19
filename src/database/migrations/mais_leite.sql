@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Tempo de geração: 17/09/2026 às 18:24
+-- Tempo de geração: 19/09/2026 às 17:59
 -- Versão do servidor: 8.0.46-0ubuntu0.24.04.4
 -- Versão do PHP: 8.3.6
 
@@ -80,7 +80,7 @@ CREATE TABLE `demanda` (
   `volume_total` decimal(10,2) NOT NULL,
   `numero_de_bebes` int UNSIGNED NOT NULL,
   `data_demanda` date NOT NULL,
-  `status_solicitacao` varchar(50) NOT NULL DEFAULT 'pendente'
+  `status_solicitacao` enum('pendente','aprovada','atendida','cancelada') NOT NULL DEFAULT 'pendente'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -120,7 +120,7 @@ CREATE TABLE `doadora` (
   `consome_alcool` tinyint(1) NOT NULL,
   `uso_medicacao` varchar(255) DEFAULT NULL,
   `observacoes` varchar(255) NOT NULL,
-  `elegibilidade` enum('ativa','removida') NOT NULL DEFAULT 'ativa'
+  `elegibilidade` enum('ativa','inativa') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'ativa'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -222,7 +222,10 @@ CREATE TABLE `frasco_pasteurizado` (
 CREATE TABLE `funcionario` (
   `id` int UNSIGNED NOT NULL,
   `nome` varchar(255) NOT NULL,
-  `cargo` varchar(255) NOT NULL
+  `cargo` varchar(255) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `senha` varchar(255) NOT NULL,
+  `status` enum('ativo','inativo') NOT NULL DEFAULT 'ativo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -234,7 +237,8 @@ CREATE TABLE `funcionario` (
 CREATE TABLE `hospital` (
   `id` int UNSIGNED NOT NULL,
   `nome` varchar(255) NOT NULL,
-  `telefone` varchar(20) DEFAULT NULL
+  `telefone` varchar(20) DEFAULT NULL,
+  `status` enum('ativo','inativo') NOT NULL DEFAULT 'ativo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -319,19 +323,6 @@ CREATE TABLE `triagem` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `usuario`
---
-
-CREATE TABLE `usuario` (
-  `id` int NOT NULL,
-  `nome` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `senha` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
 -- Estrutura para tabela `visita_coleta`
 --
 
@@ -340,8 +331,9 @@ CREATE TABLE `visita_coleta` (
   `funcionario_id` int UNSIGNED NOT NULL,
   `doadora_id` int UNSIGNED NOT NULL,
   `data` date NOT NULL,
-  `hora_coleta` time NOT NULL,
-  `volume_doado` decimal(10,2) NOT NULL
+  `hora_coleta` time DEFAULT NULL,
+  `volume_doado` decimal(10,2) DEFAULT NULL,
+  `status` enum('agendada','realizada','cancelada') NOT NULL DEFAULT 'agendada'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -497,12 +489,6 @@ ALTER TABLE `triagem`
   ADD KEY `idx_tbtriagem_funcionario` (`funcionario_id`);
 
 --
--- Índices de tabela `usuario`
---
-ALTER TABLE `usuario`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Índices de tabela `visita_coleta`
 --
 ALTER TABLE `visita_coleta`
@@ -617,12 +603,6 @@ ALTER TABLE `sorologia`
 --
 ALTER TABLE `triagem`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `usuario`
---
-ALTER TABLE `usuario`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `visita_coleta`
