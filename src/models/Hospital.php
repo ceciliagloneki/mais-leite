@@ -7,7 +7,7 @@ class Hospital
 {
     public int    $id;
     public string $nome;
-    public string $telefone;
+    public ?string $telefone;
     public string $status;
 }
 
