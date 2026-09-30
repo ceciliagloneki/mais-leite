@@ -18,15 +18,15 @@ class HospitalRepository
                 )";
 
         $pdo      = Database::getConnection();
-        $statment = $pdo->prepare($sql);
+        $statement = $pdo->prepare($sql);
 
-        $statment->execute([
+        $statement->execute([
             ':nome'     => $hospital->getNome(),
             ':telefone' => $hospital->getTelefone(),
             ':status'   => $hospital->getStatus()
         ]);
     
-        return (int) $pdo->lastInsertId;
+        return (int) $pdo->lastInsertId();
     }
 
     public function findById(int $id) : ?Hospital {
@@ -35,13 +35,13 @@ class HospitalRepository
                 WHERE id = :id";
         
         $pdo = Database::getConnection();
-        $statment = $pdo->prepare($sql);
+        $statement = $pdo->prepare($sql);
 
-        $statment->execute([
+        $statement->execute([
             ':id' => $id
         ]);
 
-        $data = $statment->fetch(\PDO::FETCH_ASSOC);
+        $data = $statement->fetch(\PDO::FETCH_ASSOC);
 
         if (!$data) {
             return null;
@@ -62,18 +62,18 @@ class HospitalRepository
         $params = [];
 
         if ($status !== null) {
-            $sql .= "WHERE status = :status";
+            $sql .= " WHERE status = :status";
             $params[':status'] = $status;
         }
 
         $pdo = Database::getConnection();
-        $statment = $pdo->prepare($sql);
+        $statement = $pdo->prepare($sql);
 
-        $statment->execute($params);
+        $statement->execute($params);
 
         $hospitais = [];
 
-        while ($data = $statment->fetch(\PDO::FETCH_ASSOC)) {
+        while ($data = $statement->fetch(\PDO::FETCH_ASSOC)) {
             $hospitais[] = new Hospital (
                 (int) $data['id'],
                 $data['nome'],
@@ -86,7 +86,30 @@ class HospitalRepository
     }
 
     public function update(Hospital $hospital) : bool {
+        $sql = "UPDATE hospital
+                SET nome = :nome, telefone = :telefone, status = :status
+                WHERE id = :id";
 
+        $pdo = Database::getConnection();
+        $statement = $pdo->prepare($sql);
+
+        return $statement->execute([
+            ':nome'     => $hospital->getNome(),
+            ':telefone' => $hospital->getTelefone(),
+            ':status'   => $hospital->getStatus(),
+            ':id'       => $hospital->getId()
+        ]);
     }
-    public function delete() {}
+    public function delete(int $id) : bool{
+        $sql = "UPDATE hospital
+                SET status = 'inativo'
+                WHERE id = :id";
+
+        $pdo = Database::getConnection();
+        $statement = $pdo->prepare($sql);
+
+        return $statement->execute([
+            ':id' => $id
+        ]);
+    }
 }
