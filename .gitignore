@@ -12,3 +12,8 @@ composer.phar
 # Sistema operacional
 .DS_Store
 Thumbs.db
+
+# Postman/Insomnia
+.postman/
+postman/
+my_environment.yaml

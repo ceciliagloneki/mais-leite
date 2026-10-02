@@ -42,14 +42,28 @@ final class Router
     public function dispatch(string $method, string $uri): void
     {
         $path = $this->normalize(parse_url($uri, PHP_URL_PATH) ?? '/');
-        $handler = $this->routes[$method][$path] ?? null;
 
-        if ($handler === null) {
-            Response::error('Rota não encontrada.', 404);
-            return;
+        foreach ($this->routes[$method] ?? [] as $route => $handler) {
+            $params = $this->match($route, $path);
+            if ($params !== null) {
+                $handler(...$params);
+                return;
+            }
         }
 
-        $handler();
+        Response::error('Rota não encontrada.', 404);
+    }
+
+    private function match(string $route, string $path): ?array
+    {
+        $pattern = preg_replace('/\{(\w+)\}/', '(?P<$1>[^/]+)', $route);
+        $pattern = '#^' . $pattern . '$#';
+
+        if (preg_match($pattern, $path, $matches)) {
+            return array_filter($matches, fn($key) => !is_int($key), ARRAY_FILTER_USE_KEY);
+        }
+
+        return null;
     }
 
     private function normalize(string $path): string
