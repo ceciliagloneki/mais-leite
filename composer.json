@@ -11,6 +11,7 @@
             "MaisLeiteBackend\\Database\\": "src/database/",
             "MaisLeiteBackend\\Dtos\\": "src/dtos/",
             "MaisLeiteBackend\\Dtos\\Funcionarios\\": "src/dtos/funcionarios/",
+            "MaisLeiteBackend\\Dtos\\ColetasDomiciliares\\": "src/dtos/coletas-domiciliares/",
             "MaisLeiteBackend\\Enums\\": "src/enums/",
             "MaisLeiteBackend\\Middlewares\\": "src/middlewares/",
             "MaisLeiteBackend\\Models\\": "src/models/",
