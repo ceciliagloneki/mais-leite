@@ -443,7 +443,8 @@ ALTER TABLE `frasco_pasteurizado`
 -- Índices de tabela `funcionario`
 --
 ALTER TABLE `funcionario`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_funcionario_email` (`email`);
 
 --
 -- Índices de tabela `hospital`
