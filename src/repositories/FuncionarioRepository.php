@@ -1,95 +1,69 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaisLeiteBackend\Repositories;
 
+use MaisLeiteBackend\Database\Database;
+use MaisLeiteBackend\Enums\StatusEnum;
 use MaisLeiteBackend\Models\Funcionario;
-use MaisLeiteBackend\Config\Database;
+use PDO;
 
 class FuncionarioRepository
 {
-    public function create(Funcionario $funcionario): int
+    private PDO $db;
+
+    public function __construct()
     {
-        $sql = "INSERT INTO funcionario
-                (nome, cargo, email, senha, status)
-                VALUES
-                (:nome, :cargo, :email, :senha, :status)";
-
-        $pdo = Database::getConnection();
-
-        $stmt = $pdo->prepare($sql);
-
-        $stmt->execute([
-            ':nome' => $funcionario->getNome(),
-            ':cargo' => $funcionario->getCargo(),
-            ':email' => $funcionario->getEmail(),
-            ':senha' => $funcionario->getSenha(),
-            ':status' => $funcionario->getStatus(),
-        ]);
-
-        return (int) $pdo->lastInsertID();
+        $this->db = Database::getConnection();
     }
 
-    public function findById(int $id): ?Funcionario
+    public function create(Funcionario $funcionario): int
+    {
+        $sql = "INSERT INTO funcionario (nome, cargo, email, senha, status)
+                VALUES (:nome, :cargo, :email, :senha, :status)";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'nome' => $funcionario->nome,
+            'cargo' => $funcionario->cargo,
+            'email' => $funcionario->email,
+            'senha' => $funcionario->senha,
+            'status' => $funcionario->status,
+        ]);
+
+        return (int) $this->db->lastInsertId();
+    }
+
+    public function findById(int $id): ?array
     {
         $sql = "SELECT id, nome, cargo, email, senha, status
                 FROM funcionario
                 WHERE id = :id";
 
-        $pdo = Database::getConnection();
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $id]);
 
-        $stmt = $pdo->prepare($sql);
+        $result = $stmt->fetch();
 
-        $stmt->execute([
-            ':id' => $id
-        ]);
-
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if (!data) {
-            return null;
-        }
-
-        return new Funcionario(
-            (int) $data['id'],
-            $data['nome'],
-            $data['cargo'],
-            $data['email'],
-            $data['senha'],
-            $data['status']
-        );
+        return $result ?: null;
     }
 
-    public function findByEmail(string $email): ?Funcionario
+    public function findByEmail(string $email): ?array
     {
         $sql = "SELECT id, nome, cargo, email, senha, status
                 FROM funcionario
                 WHERE email = :email";
 
-        $pdo = Database::getConnection();
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['email' => $email]);
 
-        $stmt = $pdo->prepare($sql);
+        $result = $stmt->fetch();
 
-        $stmt->execute([
-            ':email' => $email
-        ]);
-
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if (!data) {
-            return null;
-        }
-
-        return new Funcionario(
-            (int) $data['id'],
-            $data['nome'],
-            $data['cargo'],
-            $data['email'],
-            $data['senha'],
-            $data['status']
-        );
+        return $result ?: null;
     }
 
-    public function findAll(?string $status = null): array
+    public function findAll(?StatusEnum $status = null): array
     {
         $sql = "SELECT id, nome, cargo, email, senha, status
                 FROM funcionario";
@@ -97,68 +71,44 @@ class FuncionarioRepository
         $params = [];
 
         if ($status !== null) {
-            $sql .= "WHERE status = :status";
-            $params[':status'] = $status;
+            $sql .= " WHERE status = :status";
+            $params['status'] = $status->value;
         }
 
-        $pdo = Database::getConnection();
+        $sql .= " ORDER BY nome ASC";
 
-        $stmt = $pdo->prepare($sql);
-
+        $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
 
-        $funcionarios = [];
+        return $stmt->fetchAll();
+    }
 
-        while ($data = $stmt->fetch(\PDO::FETCH_ASSOC)){
-            $funcionarios[] = new Funcionario (
-                (int) $data['id'],
-                $data['nome'],
-                $data['cargo'],
-                $data['email'],
-                $data['senha'],
-                $data['status']
-            );
+    public function update(int $id, array $data): bool
+    {
+        $fields = [];
+        $params = ['id' => $id];
+
+        foreach ($data as $key => $value) {
+            $fields[] = "{$key} = :{$key}";
+            $params[$key] = $value;
         }
 
-        return $funcionarios;
+        $sql = "UPDATE funcionario SET " . implode(', ', $fields) . " WHERE id = :id";
+
+        $stmt = $this->db->prepare($sql);
+
+        return $stmt->execute($params);
     }
 
-    public function update(Funcionario $funcionario): bool
+    public function delete(int $id): bool
     {
-        $sql = "UPDATE funcionario
-                SET nome = :nome,
-                    cargo = :cargo,
-                    email = :email,
-                    senha = :senha,
-                    status = :status
-                WHERE id = :id";
+        $sql = "UPDATE funcionario SET status = :status WHERE id = :id";
 
-        $pdo = Database::getConnection();
-
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([
-            ':nome' => $funcionario->getNome(),
-            ':cargo' => $funcionario->getCargo(),
-            ':email' => $funcionario->getEmail(),
-            ':senha' => $funcionario->getSenha(),
-            ':status' => $funcionario->getStatus(),
-            ':id' => $funcionario->getId()
-        ]);
-    }
-
-    public function delete()
-    {
-        $sql = "UPDATE funcionario
-                SET status = 'inativo'
-                WHERE id = :id";
-
-        $pdo = Database::getConnectio();
-
-        $stmt = $pdo->prepare($sql);
-
-        return $stmt->execute([
-            ':id' => $id
+            'id' => $id,
+            'status' => StatusEnum::INATIVO->value,
         ]);
     }
 }
