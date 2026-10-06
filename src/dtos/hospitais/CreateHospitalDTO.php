@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MaisLeiteBackend\Dtos\Hospital;
 use InvalidArgumentException;
 
-final class CreateFuncionarioDTO
+final class CreateHospitalDTO
 {
     public readonly string  $nome;
     public readonly ?string $telefone;
