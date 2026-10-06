@@ -10,7 +10,6 @@ use MaisLeiteBackend\Dtos\Hospitais\HospitalResponseDTO;
 use MaisLeiteBackend\Dtos\Hospitais\HospitalListResponseDTO;
 use MaisLeiteBackend\Repositories\HospitalRepository;
 use MaisLeiteBackend\Services\HospitalService;
-use MaisLeiteBackend\Models\Hospital;
 use MaisLeiteBackend\Utils\Response;
 use InvalidArgumentException;
 
