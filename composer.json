@@ -10,6 +10,7 @@
             "MaisLeiteBackend\\Controllers\\": "src/controllers/",
             "MaisLeiteBackend\\Database\\": "src/database/",
             "MaisLeiteBackend\\Dtos\\": "src/dtos/",
+            "MaisLeiteBackend\\Dtos\\Hospitais\\": "src/dtos/hospitais/",
             "MaisLeiteBackend\\Enums\\": "src/enums/",
             "MaisLeiteBackend\\Middlewares\\": "src/middlewares/",
             "MaisLeiteBackend\\Models\\": "src/models/",

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MaisLeiteBackend\Dtos\Hospital;
+namespace MaisLeiteBackend\Dtos\Hospitais;
 use InvalidArgumentException;
 
 class UpdateHospitalDTO

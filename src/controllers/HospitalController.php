@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Controllers;
 
-use MaisLeiteBackend\Dtos\Hospital\CreateHospitalDTO;
-use MaisLeiteBackend\Dtos\Hospital\UpdateHospitalDTO;
-use MaisLeiteBackend\Dtos\Hospital\HospitalResponseDTO;
-use MaisLeiteBackend\Dtos\Hospital\HospitalListResponseDTO;
+use MaisLeiteBackend\Dtos\Hospitais\CreateHospitalDTO;
+use MaisLeiteBackend\Dtos\Hospitais\UpdateHospitalDTO;
+use MaisLeiteBackend\Dtos\Hospitais\HospitalResponseDTO;
+use MaisLeiteBackend\Dtos\Hospitais\HospitalListResponseDTO;
 use MaisLeiteBackend\Repositories\HospitalRepository;
 use MaisLeiteBackend\Services\HospitalService;
 use MaisLeiteBackend\Models\Hospital;

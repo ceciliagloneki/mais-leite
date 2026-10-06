@@ -8,10 +8,11 @@ use MaisLeiteBackend\Utils\Response;
 
 /**
  * Roteador simples: associa método HTTP + caminho a um callback.
+ * Suporta parâmetros dinâmicos no formato /recurso/{id}.
  */
 final class Router
 {
-    /** @var array<string, array<string, callable>> */
+    /** @var array<string, array<int, array{pattern: string, handler: callable}>> */
     private array $routes = [];
 
     public function get(string $path, callable $handler): void
@@ -36,20 +37,58 @@ final class Router
 
     private function add(string $method, string $path, callable $handler): void
     {
-        $this->routes[$method][$this->normalize($path)] = $handler;
+        $this->routes[$method][] = [
+            'pattern' => $this->normalize($path),
+            'handler' => $handler,
+        ];
     }
 
     public function dispatch(string $method, string $uri): void
     {
         $path = $this->normalize(parse_url($uri, PHP_URL_PATH) ?? '/');
-        $handler = $this->routes[$method][$path] ?? null;
 
-        if ($handler === null) {
-            Response::error('Rota não encontrada.', 404);
-            return;
+        foreach ($this->routes[$method] ?? [] as $route) {
+            $params = $this->match($route['pattern'], $path);
+
+            if ($params !== null) {
+                ($route['handler'])(...$params);
+                return;
+            }
         }
 
-        $handler();
+        Response::error('Rota não encontrada.', 404);
+    }
+
+    /**
+     * Tenta casar o caminho requisitado com o padrão da rota.
+     * Retorna os parâmetros capturados, ou null quando não há correspondência.
+     *
+     * @return array<int, string|int>|null
+     */
+    private function match(string $pattern, string $path): ?array
+    {
+        $patternParts = explode('/', $pattern);
+        $pathParts = explode('/', $path);
+
+        if (count($patternParts) !== count($pathParts)) {
+            return null;
+        }
+
+        $params = [];
+
+        foreach ($patternParts as $index => $part) {
+            if (preg_match('/^\{[^}]+\}$/', $part) === 1) {
+                $value = $pathParts[$index];
+                $params[] = ctype_digit($value) ? (int) $value : $value;
+                continue;
+            }
+
+            if ($part !== $pathParts[$index]) {
+                return null;
+            }
+        }
+
+        return $params;
     }
 
     private function normalize(string $path): string

@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_type=1);
+declare(strict_types=1);
 
 namespace MaisLeiteBackend\Services;
 
-use MaisLeiteBackend\Dtos\Hospital\CreateHospitalDTO;
-use MaisLeiteBackend\Dtos\Hospital\UpdateHospitalDTO;
+use MaisLeiteBackend\Dtos\Hospitais\CreateHospitalDTO;
+use MaisLeiteBackend\Dtos\Hospitais\UpdateHospitalDTO;
 use MaisLeiteBackend\Enums\StatusEnum;
 use MaisLeiteBackend\Models\Hospital;
 use MaisLeiteBackend\Repositories\HospitalRepository;
@@ -37,11 +37,11 @@ final class HospitalService
     public function findAll(?string $status = null) : array {
         $statusEnum = null;
 
-        if ($status !== null) {
+        if ($status !== null && $status !== 'todos') {
             $statusEnum = StatusEnum::tryFrom($status);
 
             if ($statusEnum === null)
-                throw new InvalidArgumentException("Status Inválido. Use: ativo ou inativo!");
+                throw new InvalidArgumentException("Status Inválido. Use: ativo, inativo ou todos!");
         }
 
         return $this->repository->findAll($statusEnum);
