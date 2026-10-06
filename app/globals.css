@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Superfície principal creme (fundo do app) */
+  --background: 28 60% 97%;
+  --foreground: 222 30% 20%;
+
+  /* Superfícies de conteúdo (cards, tabela) */
+  --surface: 0 0% 100%;
+  --surface-foreground: 222 30% 20%;
+
+  --border: 28 25% 88%;
+  --input: 28 25% 88%;
+  --ring: 222 47% 25%;
+
+  /* Acento primário coral/salmão (CTA, destaques) */
+  --primary: 10 72% 60%;
+  --primary-foreground: 0 0% 100%;
+
+  --muted: 28 30% 94%;
+  --muted-foreground: 222 12% 45%;
+
+  --success: 142 55% 42%;
+  --warning: 32 85% 55%;
+  --danger: 0 72% 58%;
+
+  /* Sidebar escuro azulado (navegação lateral fixa) */
+  --sidebar: 222 32% 18%;
+  --sidebar-foreground: 210 20% 92%;
+  --sidebar-muted: 215 15% 65%;
+  --sidebar-accent: 10 72% 60%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 222 25% 26%;
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
