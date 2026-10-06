@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
+namespace MaisLeiteBackend\Controllers;
+
 use MaisLeiteBackend\Dtos\Hospital\CreateHospitalDTO;
 use MaisLeiteBackend\Dtos\Hospital\UpdateHospitalDTO;
 use MaisLeiteBackend\Dtos\Hospital\HospitalResponseDTO;
 use MaisLeiteBackend\Dtos\Hospital\HospitalListResponseDTO;
 use MaisLeiteBackend\Repositories\HospitalRepository;
 use MaisLeiteBackend\Services\HospitalService;
-// use MaisLeiteBackend\Models\Hospital;
+use MaisLeiteBackend\Models\Hospital;
 use MaisLeiteBackend\Utils\Response;
-// use InvalidArgumentException;
+use InvalidArgumentException;
 
 final class HospitalController
 {
