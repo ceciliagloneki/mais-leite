@@ -66,10 +66,10 @@ final class DemandaService
         if ($demanda === null)
             throw new InvalidArgumentException("Demanda não encontrada!");
 
-        if ($demanda['status'] === StatusSolicitacaoEnum::CANCELADA->value)
-            throw new InvalidArgumentException("Demanada já está cancelada!");
+        if ($demanda['status_solicitacao'] === StatusSolicitacaoEnum::CANCELADA->value)
+            throw new InvalidArgumentException("Demanda já está cancelada!");
 
-        if ($demanda['status'] === StatusSolicitacaoEnum::ATENDIDA->value)
+        if ($demanda['status_solicitacao'] === StatusSolicitacaoEnum::ATENDIDA->value)
             throw new InvalidArgumentException("Não é possível cancelar uma demanda já atendida!");
 
         return $this->repository->delete($id);
