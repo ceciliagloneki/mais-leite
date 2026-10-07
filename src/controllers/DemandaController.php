@@ -45,6 +45,17 @@ final class DemandaController
         }
     }
 
+    public function findById(int $id) : void {
+        $demanda = $this->service->findById($id);
+
+        if ($demanda === null) {
+            Response::error('Demanda não encontrada!', 404);
+            return;
+        }
+
+        Response::json(DemandaResponseDTO::fromArray($demanda));
+    }
+
     public function update(int $id) : void {
         try {
             $demanda = $this->service->findById($id);
