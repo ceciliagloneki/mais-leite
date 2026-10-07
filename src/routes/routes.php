@@ -46,6 +46,6 @@ $router->post('/demandas', [$demanda_controller, 'create']);
 $router->get('/demandas', [$demanda_controller, 'findAll']);
 $router->get('/demandas/{id}', [$demanda_controller, 'findById']);
 $router->put('/demandas/{id}', [$demanda_controller, 'update']);
-$router->delete('/demanda/{id}', [$demanda_controller, 'delete']);
+$router->delete('/demandas/{id}', [$demanda_controller, 'delete']);
 
 return $router;
