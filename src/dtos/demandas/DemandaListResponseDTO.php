@@ -8,7 +8,7 @@ final class  DemandaListResponseDTO
 {
     public static function fromArray(array $demandas) : array {
         return array_map(
-            fn(array $demanda) => DemandaListResponseDTO::fromArray($demanda), $demandas
+            fn(array $demanda) => DemandaResponseDTO::fromArray($demanda), $demandas
         );
     }
 }
