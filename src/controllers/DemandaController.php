@@ -53,7 +53,7 @@ final class DemandaController
                 return;
             }
 
-            $data = json_decode(file_get_contents('php://inputs'), true) ?? [];
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
             $dto  = new UpdateDemandaDTO($data);
             $this->service->update($id, $dto);
 
@@ -67,7 +67,7 @@ final class DemandaController
     public function delete(int $id) : void {
         try {
             $demanda = $this->service->findById($id);
-            if($demanda == null) {
+            if($demanda === null) {
                 Response::error("Demanda não encontrada!", 404);
                 return;
             }
