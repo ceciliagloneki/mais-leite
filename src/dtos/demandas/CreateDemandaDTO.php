@@ -21,7 +21,7 @@ final class CreateDemandaDTO
         $this->volume_total       = $this->validateVolume($data['volume_total']);
         $this->numero_de_bebes    = $this->validateNumBebes($data['numero_de_bebes']);
         $this->data_demanda       = $this->validateData($data['data_demanda']);
-        $this->status_solicitacao = isset($data['status']) ? $this->validateStatus($data['status']) : StatusSolicitacaoEnum::PENDENTE;
+        $this->status_solicitacao = isset($data['status_solicitacao']) ? $this->validateStatus($data['status_solicitaco']) : StatusSolicitacaoEnum::PENDENTE;
     }
 
     private function validateRequired(array $data) : void {
