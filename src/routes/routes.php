@@ -6,6 +6,7 @@ use MaisLeiteBackend\Controllers\ColetaDomiciliarController;
 use MaisLeiteBackend\Controllers\HealthController;
 use MaisLeiteBackend\Controllers\FuncionarioController;
 use MaisLeiteBackend\Controllers\HospitalController;
+use MaisLeiteBackend\Controllers\DemandaController;
 use MaisLeiteBackend\Routes\Router;
 
 /**
@@ -38,5 +39,13 @@ $router->get('/coletas-domiciliares', [$coletaController, 'findAll']);
 $router->get('/coletas-domiciliares/{id}', [$coletaController, 'findById']);
 $router->put('/coletas-domiciliares/{id}', [$coletaController, 'update']);
 $router->delete('/coletas-domiciliares/{id}', [$coletaController, 'delete']);
+
+// Demandas
+$demanda_controller = new DemandaController();
+$router->post('/demandas', [$demanda_controller, 'create']);
+$router->get('/demandas', [$demanda_controller, 'findAll']);
+$router->get('/demandas/{id}', [$demanda_controller, 'findById']);
+$router->put('/demandas/{id}', [$demanda_controller, 'update']);
+$router->delete('/demanda/{id}', [$demanda_controller, 'delete']);
 
 return $router;
