@@ -11,7 +11,7 @@ class Demanda
         public readonly ?int   $id,
         public readonly ?int   $hospital_id,
         public readonly float  $volume_total,
-        public readonly int    $num_de_bebes,
+        public readonly int    $numero_de_bebes,
         public readonly string $data_demanda,
         public readonly StatusSolicitacaoEnum $status_solicitacao
     ) {}
