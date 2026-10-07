@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Enums;
 
-enum StatusSolicitacao: string
+enum StatusSolicitacaoEnum: string
 {
     case PENDENTE  = 'pendente';
     case APROVADA  = 'aprovada';
