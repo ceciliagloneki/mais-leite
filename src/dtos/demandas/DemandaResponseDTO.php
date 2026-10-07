@@ -15,6 +15,7 @@ final class DemandaResponseDTO
             ],
             'volume_total'       => (float) $data['volume_total'],
             'numero_de_bebes'    => $data['numero_de_bebes'],
+            'data_demanda'       => $data['data_demanda'],
             'status_solicitacao' => $data['status_solicitacao']
         ];
     }
