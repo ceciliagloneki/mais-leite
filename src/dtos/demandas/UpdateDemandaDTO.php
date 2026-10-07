@@ -21,7 +21,7 @@ final class UpdateDemandaDTO
 
         $this->volume_total       = isset($data['volume_total']) ? $this->validateVolume($data['volume_total']) : null;
         $this->numero_de_bebes    = isset($data['numero_de_bebes']) ? $this->validateNumBebes($data['numero_de_bebes']) : null;
-        $this->data_demanda       = isset($data['data_demanda']) ? $this->validateData('data_demanda') : null;
+        $this->data_demanda       = isset($data['data_demanda']) ? $this->validateData($data['data_demanda']) : null;
         $this->status_solicitacao = isset($data['status_solicitacao']) ? $this->validateStatus($data['status_solicitacao']) : null;
     }
 
