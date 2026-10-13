@@ -4,42 +4,45 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Routes;
 
+use MaisLeiteBackend\Middlewares\AuthMiddleware;
 use MaisLeiteBackend\Utils\Response;
 
 /**
  * Roteador simples: associa método HTTP + caminho a um callback.
  * Suporta parâmetros dinâmicos no formato /recurso/{id}.
+ * Rotas podem ser marcadas como protegidas, exigindo autenticação.
  */
 final class Router
 {
-    /** @var array<string, array<int, array{pattern: string, handler: callable}>> */
+    /** @var array<string, array<int, array{pattern: string, handler: callable, protected: bool}>> */
     private array $routes = [];
 
-    public function get(string $path, callable $handler): void
+    public function get(string $path, callable $handler, bool $protected = true): void
     {
-        $this->add('GET', $path, $handler);
+        $this->add('GET', $path, $handler, $protected);
     }
 
-    public function post(string $path, callable $handler): void
+    public function post(string $path, callable $handler, bool $protected = true): void
     {
-        $this->add('POST', $path, $handler);
+        $this->add('POST', $path, $handler, $protected);
     }
 
-    public function put(string $path, callable $handler): void
+    public function put(string $path, callable $handler, bool $protected = true): void
     {
-        $this->add('PUT', $path, $handler);
+        $this->add('PUT', $path, $handler, $protected);
     }
 
-    public function delete(string $path, callable $handler): void
+    public function delete(string $path, callable $handler, bool $protected = true): void
     {
-        $this->add('DELETE', $path, $handler);
+        $this->add('DELETE', $path, $handler, $protected);
     }
 
-    private function add(string $method, string $path, callable $handler): void
+    private function add(string $method, string $path, callable $handler, bool $protected): void
     {
         $this->routes[$method][] = [
             'pattern' => $this->normalize($path),
             'handler' => $handler,
+            'protected' => $protected,
         ];
     }
 
@@ -51,6 +54,10 @@ final class Router
             $params = $this->match($route['pattern'], $path);
 
             if ($params !== null) {
+                if ($route['protected']) {
+                    AuthMiddleware::handle();
+                }
+
                 ($route['handler'])(...$params);
                 return;
             }
