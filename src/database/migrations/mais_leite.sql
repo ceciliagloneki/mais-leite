@@ -265,7 +265,8 @@ CREATE TABLE `prescricao` (
   `demanda_id` int UNSIGNED NOT NULL,
   `volume_prescrito` decimal(10,2) NOT NULL,
   `nome_do_rn` varchar(100) NOT NULL,
-  `tipo_leite` enum('colostro','transicao','maduro') NOT NULL
+  `tipo_leite` enum('colostro','transicao','maduro') NOT NULL,
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
