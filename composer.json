@@ -12,6 +12,7 @@
             "MaisLeiteBackend\\Dtos\\": "src/dtos/",
             "MaisLeiteBackend\\Dtos\\Hospitais\\": "src/dtos/hospitais/",
             "MaisLeiteBackend\\Dtos\\Demandas\\": "src/dtos/demandas/",
+            "MaisLeiteBackend\\Dtos\\Prescricoes\\": "src/dtos/prescricoes/",
             "MaisLeiteBackend\\Dtos\\Auth\\": "src/dtos/auth/",
             "MaisLeiteBackend\\Dtos\\Funcionarios\\": "src/dtos/funcionarios/",
             "MaisLeiteBackend\\Dtos\\ColetasDomiciliares\\": "src/dtos/coletas-domiciliares/",
