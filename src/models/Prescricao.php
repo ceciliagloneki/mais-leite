@@ -8,11 +8,11 @@ use MaisLeiteBackend\Enums\TipoleiteEnum;
 class Prescricao
 {
     public function __construct(
-        public readonly int    $id,
+        public readonly ?int    $id,
         public readonly int    $demanda_id,
         public readonly float  $volume_prescrito,
         public readonly string $nome_do_rn,
         public readonly TipoleiteEnum $tipo_leite,
-        public readonly string $deleted_at
+        public readonly ?string $deleted_at = null
     ) {}
 }
