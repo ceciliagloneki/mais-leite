@@ -19,7 +19,7 @@ final class DemandaService
 
     public function create(CreateDemandaDTO $dto) : int {
         if (!$this->repository->hospitalExists($dto->hospital_id))
-            throw new InvalidArgumentException("Hospital não encontrado ou inativo");
+            throw new InvalidArgumentException("Hospital não encontrado ou inativo!");
 
         $demanda = new Demanda(
             id                 : null,
