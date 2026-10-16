@@ -14,8 +14,6 @@ final class UpdateDemandaDTO
     public readonly ?string $data_demanda;
     public readonly ?StatusSolicitacaoEnum $status_solicitacao;
 
-    private const ALLOWED_FIELDS = ['volume_total', 'numero_de_bebes', 'data_demanda', 'status_solicitacao'];
-
     public function __construct(array $data) {
         $this->validateAllowedFields($data);
 
@@ -30,7 +28,7 @@ final class UpdateDemandaDTO
 
         foreach ($not_allowed as $field) {
             if (isset($data[$field]))
-                throw new InvalidArgumentException("Campo '{$field}' não pose ser alterado!");
+                throw new InvalidArgumentException("Campo '{$field}' não pode ser alterado!");
         }
 
         if (empty($data))
