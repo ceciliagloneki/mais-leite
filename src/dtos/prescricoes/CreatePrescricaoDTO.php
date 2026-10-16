@@ -45,6 +45,9 @@ final class CreatePrescricaoDTO
         if ($nome === '')
             throw new InvalidArgumentException("Campo 'nome_do_rn' é obrigatório!");
 
+        if (mb_strlen($nome, 'UTF-8') > 100)
+            throw new InvalidArgumentException("'nome_do_rn' não pode ser maior que 100 caracteres!");
+
         return $nome;
     }
 
