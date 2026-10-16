@@ -79,7 +79,7 @@ final class PrescricaoRepository
             $params[$key] = $value;
         }
 
-        $sql = "UPDATE prescricao SET" .
+        $sql = "UPDATE prescricao SET " .
                 implode(', ', $fields) .
                 " WHERE id = :id";
 
