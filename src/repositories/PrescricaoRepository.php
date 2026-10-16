@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MaisLeiteBackend\Repositories;
 
 use MaisLeiteBackend\Database\Database;
-use MaisLeiteBackend\Enums\TipoleiteEnum;
+use MaisLeiteBackend\Enums\TipoLeiteEnum;
 use MaisLeiteBackend\Models\Prescricao;
 use PDO;
 
@@ -45,7 +45,7 @@ final class PrescricaoRepository
         return $res ?: null;
     }
 
-    public function findAll(?int $demanda_id = null, ?TipoleiteEnum $tipo_leite = null) : array {
+    public function findAll(?int $demanda_id = null, ?TipoLeiteEnum $tipo_leite = null) : array {
         $sql = "SELECT id, demanda_id, volume_prescrito, nome_do_rn, tipo_leite
                 FROM prescricao
                 WHERE deleted_at IS NULL";

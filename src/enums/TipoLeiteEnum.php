@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Enums;
 
-enum TipoleiteEnum : string
+enum TipoLeiteEnum : string
 {
     case COLOSTRO  = 'colostro';
     case TRANSICAO = 'transicao';

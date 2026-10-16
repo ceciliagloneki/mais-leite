@@ -7,7 +7,7 @@ namespace MaisLeiteBackend\Services;
 use InvalidArgumentException;
 use MaisLeiteBackend\Dtos\Prescricoes\CreatePrescricaoDTO;
 use MaisLeiteBackend\Dtos\Prescricoes\UpdatePrescricaoDTO;
-use MaisLeiteBackend\Enums\TipoleiteEnum;
+use MaisLeiteBackend\Enums\TipoLeiteEnum;
 use MaisLeiteBackend\Models\Prescricao;
 use MaisLeiteBackend\Repositories\PrescricaoRepository;
 
@@ -45,9 +45,9 @@ final class PrescricaoService
         }
 
         if ($tipo_leite !== null) {
-            $tipoEnum = TipoleiteEnum::tryFrom($tipo_leite);
+            $tipoEnum = TipoLeiteEnum::tryFrom($tipo_leite);
             if ($tipoEnum === null)
-                throw new InvalidArgumentException("Status Inválido! Use: pendente, aprovada, atendida ou cancelada.");
+                throw new InvalidArgumentException("Tipo de leite inválido! Use: colostro, transicao ou maduro.");
         }
 
         return $this->repo->findAll($demanda_id, $tipoEnum);
@@ -60,7 +60,9 @@ final class PrescricaoService
             throw new InvalidArgumentException("Prescrição não encontrada!");
 
         $data = $dto->toArray();
-
+        
+        if ($data === []) return true;
+        
         return $this->repo->update($id, $data);
     }
 
@@ -70,8 +72,8 @@ final class PrescricaoService
         if ($prescricao === null)
             throw new InvalidArgumentException("Prescrição não encontrada!");
 
-        if ($prescricao['deleted_at'] !== null)
-            throw new InvalidArgumentException("Precrição já está deletada!");
+        // if ($prescricao['deleted_at'] !== null)
+        //     throw new InvalidArgumentException("Precrição já está deletada!");
 
         return $this->repo->delete($id);
     }

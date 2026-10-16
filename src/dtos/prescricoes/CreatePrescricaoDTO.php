@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace MaisLeiteBackend\Dtos\Prescricoes;
-use MaisLeiteBackend\Enums\TipoleiteEnum;
+use MaisLeiteBackend\Enums\TipoLeiteEnum;
 use InvalidArgumentException;
 
 final class CreatePrescricaoDTO
@@ -11,7 +11,7 @@ final class CreatePrescricaoDTO
     public readonly int    $demanda_id;
     public readonly float  $volume_prescrito;
     public readonly string $nome_do_rn;
-    public readonly TipoleiteEnum $tipo_leite;
+    public readonly TipoLeiteEnum $tipo_leite;
 
     public function __construct(array $data) {
         $this->validateRequired($data);
@@ -51,8 +51,8 @@ final class CreatePrescricaoDTO
         return $nome;
     }
 
-    private function validateTipoLeite(string $tipo) : TipoleiteEnum {
-        $enum = TipoleiteEnum::tryFrom($tipo);
+    private function validateTipoLeite(string $tipo) : TipoLeiteEnum {
+        $enum = TipoLeiteEnum::tryFrom($tipo);
 
         if ($enum === null)
             throw new InvalidArgumentException(("Tipo de Leite Inválido! use [colostro, transicao ou maduro]!"));

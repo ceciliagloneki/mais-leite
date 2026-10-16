@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace MaisLeiteBackend\Models;
-use MaisLeiteBackend\Enums\TipoleiteEnum;
+use MaisLeiteBackend\Enums\TipoLeiteEnum;
 
 class Prescricao
 {
@@ -12,7 +12,7 @@ class Prescricao
         public readonly int    $demanda_id,
         public readonly float  $volume_prescrito,
         public readonly string $nome_do_rn,
-        public readonly TipoleiteEnum $tipo_leite,
+        public readonly TipoLeiteEnum $tipo_leite,
         public readonly ?string $deleted_at = null
     ) {}
 }
