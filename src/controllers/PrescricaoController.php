@@ -36,7 +36,7 @@ final class PrescricaoController
 
     public function findAll() : void {
         try {
-            $demanda    = $_GET['demanda_id'] ?? null;
+            $demanda = isset($_GET['demanda_id']) && ctype_digit((string) $_GET['demanda_id']) ? (int) $_GET['demanda_id'] : null;
             $tipo_leite = $_GET['tipo_leite'] ?? null;
             
             $prescricoes = $this->service->findAll($demanda, $tipo_leite);
