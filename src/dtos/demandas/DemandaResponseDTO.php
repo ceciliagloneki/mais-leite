@@ -13,7 +13,7 @@ final class DemandaResponseDTO
                 'id'   => (int) $data['hospital_id'],
                 'nome' => $data['hospital_nome']
             ],
-            'volume_total'       => (float) $data['volume_total'],
+            'volume_total'       => number_format((float) $data['volume_total'], 2),
             'numero_de_bebes'    => $data['numero_de_bebes'],
             'data_demanda'       => $data['data_demanda'],
             'status_solicitacao' => $data['status_solicitacao']
