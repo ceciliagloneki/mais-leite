@@ -8,6 +8,7 @@ use MaisLeiteBackend\Controllers\HealthController;
 use MaisLeiteBackend\Controllers\FuncionarioController;
 use MaisLeiteBackend\Controllers\HospitalController;
 use MaisLeiteBackend\Controllers\DemandaController;
+use MaisLeiteBackend\Controllers\PrescricaoController;
 use MaisLeiteBackend\Routes\Router;
 
 /**
@@ -57,5 +58,13 @@ $router->get('/demandas', [$demanda_controller, 'findAll']);
 $router->get('/demandas/{id}', [$demanda_controller, 'findById']);
 $router->put('/demandas/{id}', [$demanda_controller, 'update']);
 $router->delete('/demandas/{id}', [$demanda_controller, 'delete']);
+
+// Prescrições
+$prescricao_controller = new PrescricaoController();
+$router->post('/prescricoes', [$prescricao_controller, 'create']);
+$router->get('/prescricoes', [$prescricao_controller, 'findAll']);
+$router->get('/prescricoes/{id}', [$prescricao_controller, 'findById']);
+$router->put('/prescricoes/{id}', [$prescricao_controller, 'update']);
+$router->delete('/prescricoes/{id}', [$prescricao_controller, 'delete']);
 
 return $router;
