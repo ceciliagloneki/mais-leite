@@ -52,7 +52,7 @@ final class CreatePrescricaoDTO
     }
 
     private function validateTipoLeite(string $tipo) : TipoLeiteEnum {
-        $enum = TipoLeiteEnum::tryFrom($tipo);
+        $enum = TipoLeiteEnum::tryFrom(strtolower($tipo));
 
         if ($enum === null)
             throw new InvalidArgumentException(("Tipo de Leite Inválido! use [colostro, transicao ou maduro]!"));
