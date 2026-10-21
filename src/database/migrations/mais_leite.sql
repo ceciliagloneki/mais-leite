@@ -95,7 +95,8 @@ CREATE TABLE `distribuicao` (
   `data` date NOT NULL,
   `horario` time NOT NULL,
   `assinatura_entrega` varchar(255) NOT NULL,
-  `assinatura_recebimento` varchar(255) NOT NULL
+  `assinatura_recebimento` varchar(255) NOT NULL,
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
