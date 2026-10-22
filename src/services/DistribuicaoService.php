@@ -20,6 +20,8 @@ final class DistribuicaoService
         if (!$this->repo->demandaExists($dto->demandaId))
             throw new InvalidArgumentException("Demanda não encontrada!");
 
+        $this->validateNotFuture($dto->data, $dto->horario);
+
         $distribuicao = new Distribuicao(
             id : null,
             demandaId : $dto->demandaId,
@@ -62,6 +64,13 @@ final class DistribuicaoService
 
         if ($data === []) return true;
 
+        if ($dto->data !== null || $dto->horario !== null) {
+            $dataFinal = $dto->data ?? $distribuicao['data'];
+            $horarioFinal = $dto->horario ?? substr($distribuicao['horario'], 0, 5);
+
+            $this->validateNotFuture($dataFinal, $horarioFinal);
+        }
+
         return $this->repo->update($id, $data);
     }
 
@@ -72,5 +81,24 @@ final class DistribuicaoService
             throw new InvalidArgumentException("Distribuição não encontrada!");
 
         return $this->repo->delete($id);
+    }
+
+    private function validateNotFuture(string $data, string $horario): void {
+        $tz = new \DateTimeZone('America/Sao_Paulo');
+        $horario = substr($horario, 0, 5);
+
+        $informada = \DateTimeImmutable::createFromFormat(
+            '!Y-m-d H:i',
+            "{$data} {$horario}",
+            $tz
+        );
+
+        if ($informada === false || $informada->format('Y-m-d H:i') !== "{$data} {$horario}") 
+            throw new InvalidArgumentException("Data e (ou) horário da distribuição são inválidos!");
+
+        $agora = new \DateTimeImmutable('now', $tz);
+
+        if ($informada > $agora)
+            throw new InvalidArgumentException("Data e (ou) horário da distribuição não podem ser futuros!");
     }
 }
