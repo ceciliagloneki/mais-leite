@@ -69,7 +69,7 @@ $router->put('/prescricoes/{id}', [$prescricao_controller, 'update']);
 $router->delete('/prescricoes/{id}', [$prescricao_controller, 'delete']);
 
 // Distribuições
-$distribuicao_controller = new DistribuicaoController;
+$distribuicao_controller = new DistribuicaoController();
 $router->post('/distribuicoes', [$distribuicao_controller, 'create']);
 $router->get('/distribuicoes', [$distribuicao_controller, 'findAll']);
 $router->get('/distribuicoes/{id}', [$distribuicao_controller, 'findById']);
