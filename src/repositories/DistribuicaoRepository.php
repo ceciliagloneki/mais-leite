@@ -56,7 +56,7 @@ final class DistribuicaoRepository
     }
 
     public function findAll (?int $demanda_id = null, ?string $data = null) :array {
-        $sql = "SELECT id, demanda_id, data, hora, assinatura_entrega, assinatura_recebimento
+        $sql = "SELECT id, demanda_id, data, horario, assinatura_entrega, assinatura_recebimento
                 FROM distribuicao
                 WHERE deleted_at IS NULL";
 
@@ -85,7 +85,7 @@ final class DistribuicaoRepository
         $params = ['id' => $id];
 
         foreach ($data as $key => $value) {
-            $fields = "{$key} = :{$key}";
+            $fields[] = "{$key} = :{$key}";
             $params[$key] = $value;
         }
 
@@ -101,7 +101,7 @@ final class DistribuicaoRepository
         $sql = "UPDATE distribuicao
                 SET deleted_at = CURRENT_TIMESTAMP
                 WHERE id = :id
-                AND delete_at IS NULL";
+                AND deleted_at IS NULL";
 
         $statement = $this->db->prepare($sql);
         return $statement->execute(['id' => $id]);
