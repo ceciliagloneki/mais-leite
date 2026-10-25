@@ -12,6 +12,7 @@
             "MaisLeiteBackend\\Dtos\\": "src/dtos/",
             "MaisLeiteBackend\\Dtos\\ColetasDomiciliares\\": "src/dtos/coletas-domiciliares/",
             "MaisLeiteBackend\\Dtos\\ControleFrascos\\": "src/dtos/controle-frascos/",
+            "MaisLeiteBackend\\Dtos\\Frascos\\": "src/dtos/frascos/",
             "MaisLeiteBackend\\Enums\\": "src/enums/",
             "MaisLeiteBackend\\Middlewares\\": "src/middlewares/",
             "MaisLeiteBackend\\Models\\": "src/models/",

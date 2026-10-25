@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use MaisLeiteBackend\Controllers\ColetaDomiciliarController;
 use MaisLeiteBackend\Controllers\ControleFrascoController;
+use MaisLeiteBackend\Controllers\FrascoController;
 use MaisLeiteBackend\Controllers\HealthController;
 use MaisLeiteBackend\Routes\Router;
 
@@ -30,5 +31,13 @@ $router->get('/controle-frascos', [$controleFrascoController, 'findAll']);
 $router->get('/controle-frascos/{id}', fn(string $id) => $controleFrascoController->findById((int) $id));
 $router->put('/controle-frascos/{id}', fn(string $id) => $controleFrascoController->update((int) $id));
 $router->delete('/controle-frascos/{id}', fn(string $id) => $controleFrascoController->delete((int) $id));
+
+// Frascos
+$frascoController = new FrascoController();
+$router->post('/frascos', [$frascoController, 'create']);
+$router->get('/frascos', [$frascoController, 'findAll']);
+$router->get('/frascos/{id}', fn(string $id) => $frascoController->findById((int) $id));
+$router->put('/frascos/{id}', fn(string $id) => $frascoController->update((int) $id));
+$router->delete('/frascos/{id}', fn(string $id) => $frascoController->delete((int) $id));
 
 return $router;
