@@ -63,9 +63,10 @@ CREATE TABLE `bebe` (
 CREATE TABLE `controle_frascos` (
   `id` int UNSIGNED NOT NULL,
   `visita_coleta_id` int UNSIGNED NOT NULL,
-  `tipo_frasco` varchar(100) NOT NULL,
+  `tipo_frasco` ENUM('tampa_plastica_500ml','graduado_200ml') NOT NULL,
   `qtd_enviada` int UNSIGNED NOT NULL DEFAULT '0',
-  `qtd_recebida` int UNSIGNED NOT NULL DEFAULT '0'
+  `qtd_recebida` int UNSIGNED NOT NULL DEFAULT '0',
+  `deleted_at` DATETIME NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -147,9 +148,10 @@ CREATE TABLE `endereco` (
 
 CREATE TABLE `frasco` (
   `id` int UNSIGNED NOT NULL,
-  `tipo_frasco` varchar(100) NOT NULL,
+  `tipo_frasco` enum('tampa_plastica_500ml','graduado_200ml') NOT NULL,
   `volume_total` decimal(10,2) NOT NULL,
-  `estado` varchar(45) NOT NULL
+  `estado` enum('coleta_domiciliar','recepcao_inspecao','processamento','preparo_liberacao','distribuicao','devolvido','descartado') NOT NULL DEFAULT 'coleta_domiciliar',
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
