@@ -1,0 +1,29 @@
+{
+    "name": "mais-leite/backend",
+    "description": "Backend do projeto Mais Leite (PHP + MySQL).",
+    "require": {
+        "php": ">=8.1",
+        "vlucas/phpdotenv": "^5.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "MaisLeiteBackend\\Controllers\\": "src/controllers/",
+            "MaisLeiteBackend\\Database\\": "src/database/",
+            "MaisLeiteBackend\\Dtos\\": "src/dtos/",
+            "MaisLeiteBackend\\Dtos\\Hospitais\\": "src/dtos/hospitais/",
+            "MaisLeiteBackend\\Dtos\\Demandas\\": "src/dtos/demandas/",
+            "MaisLeiteBackend\\Dtos\\Prescricoes\\": "src/dtos/prescricoes/",
+            "MaisLeiteBackend\\Dtos\\Distribuicoes\\": "src/dtos/distribuicoes/",
+            "MaisLeiteBackend\\Dtos\\Auth\\": "src/dtos/auth/",
+            "MaisLeiteBackend\\Dtos\\Funcionarios\\": "src/dtos/funcionarios/",
+            "MaisLeiteBackend\\Dtos\\ColetasDomiciliares\\": "src/dtos/coletas-domiciliares/",
+            "MaisLeiteBackend\\Enums\\": "src/enums/",
+            "MaisLeiteBackend\\Middlewares\\": "src/middlewares/",
+            "MaisLeiteBackend\\Models\\": "src/models/",
+            "MaisLeiteBackend\\Repositories\\": "src/repositories/",
+            "MaisLeiteBackend\\Routes\\": "src/routes/",
+            "MaisLeiteBackend\\Services\\": "src/services/",
+            "MaisLeiteBackend\\Utils\\": "src/utils/"
+        }
+    }
+}
