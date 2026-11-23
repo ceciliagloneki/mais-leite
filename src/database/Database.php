@@ -8,9 +8,6 @@ use PDO;
 use PDOException;
 use RuntimeException;
 
-/**
- * Cria e reutiliza uma única conexão PDO com o banco de dados.
- */
 final class Database
 {
     private static ?PDO $connection = null;

@@ -16,4 +16,7 @@ Thumbs.db
 # Postman/Insomnia
 .postman/
 postman/
+!docs/postman/
+!docs/postman/**
+.phpunit.cache/
 my_environment.yaml
