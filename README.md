@@ -84,14 +84,35 @@ npm test            # testes com Vitest
 npm run typecheck   # checagem de tipos
 ```
 
-## Deploy na Vercel (frontend)
+## Deploy
+
+### Backend no Railway
+
+O backend tem um `Dockerfile`. Ao iniciar, ele cria as tabelas e o usuário admin, depois sobe a API.
+
+1. No [Railway](https://railway.com), crie um projeto com **Deploy from GitHub repo** e escolha este repositório.
+2. No serviço criado, vá em **Settings → Root Directory** e coloque `mais-leite-backend`.
+3. No projeto, adicione um banco com **+ Create → Database → MySQL**.
+4. No serviço da API, em **Variables**, crie:
+
+   | Variável | Valor |
+   | --- | --- |
+   | `DB_HOST` | `${{MySQL.MYSQLHOST}}` |
+   | `DB_PORT` | `${{MySQL.MYSQLPORT}}` |
+   | `DB_NAME` | `${{MySQL.MYSQLDATABASE}}` |
+   | `DB_USER` | `${{MySQL.MYSQLUSER}}` |
+   | `DB_PASSWORD` | `${{MySQL.MYSQLPASSWORD}}` |
+   | `APP_SECRET` | um texto grande e aleatório |
+   | `FRONTEND_URL` | a URL do frontend na Vercel (sem `/` no final) |
+
+5. Em **Settings → Networking**, clique em **Generate Domain**. Essa é a URL da API.
+
+### Frontend na Vercel
 
 1. Na Vercel, importe este repositório.
 2. Em **Root Directory**, escolha `mais-leite-frontend`. O framework é detectado como Next.js.
-3. Em **Environment Variables**, crie `NEXT_PUBLIC_API_URL` com a URL pública da API.
+3. Em **Environment Variables**, crie `NEXT_PUBLIC_API_URL` com a URL da API gerada no Railway.
 4. Clique em **Deploy**.
-
-A API em PHP + MySQL não roda nativamente na Vercel, então precisa ficar em uma hospedagem com PHP e MySQL. No `.env` do backend, configure `FRONTEND_URL` com a URL gerada pela Vercel para liberar o CORS.
 
 ## Telas (ordem do menu lateral)
 
