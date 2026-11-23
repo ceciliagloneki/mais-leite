@@ -4,102 +4,173 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Services;
 
+use MaisLeiteBackend\Dtos\ColetasDomiciliares\AgendarVisitaDTO;
 use MaisLeiteBackend\Dtos\ColetasDomiciliares\CreateColetaDomiciliarDTO;
-use MaisLeiteBackend\Dtos\ColetasDomiciliares\UpdateColetaDomiciliarDTO;
-use MaisLeiteBackend\Enums\StatusColetaEnum;
+use MaisLeiteBackend\Dtos\ColetasDomiciliares\CreateFrascoLeiteCruDTO;
+use MaisLeiteBackend\Dtos\ColetasDomiciliares\RealizarVisitaDTO;
+use MaisLeiteBackend\Enums\StatusDoadoraEnum;
+use MaisLeiteBackend\Enums\StatusVisitaEnum;
+use MaisLeiteBackend\Enums\TipoLeiteEnum;
 use MaisLeiteBackend\Models\ColetaDomiciliar;
+use MaisLeiteBackend\Models\FrascoLeiteCru;
 use MaisLeiteBackend\Repositories\ColetaDomiciliarRepository;
+use MaisLeiteBackend\Repositories\DoadoraRepository;
+use MaisLeiteBackend\Repositories\FrascoLeiteCruRepository;
 use InvalidArgumentException;
 
 final class ColetaDomiciliarService
 {
     public function __construct(
-        private readonly ColetaDomiciliarRepository $repository
+        private readonly ColetaDomiciliarRepository $repository,
+        private readonly FrascoLeiteCruRepository $frascoRepository,
+        private readonly DoadoraRepository $doadoraRepository
     ) {}
 
-    public function create(CreateColetaDomiciliarDTO $dto): int
+    public function create(CreateColetaDomiciliarDTO $dto, int $funcionarioId): int
     {
-        if (!$this->repository->doadoraExists($dto->doadoraId)) {
-            throw new InvalidArgumentException("Doadora não encontrada ou inativa.");
+        $doadora = $this->validarDoadora($dto->doadoraId);
+        $this->validarDiaDaZona($doadora, $dto->data);
+        if ($dto->data > date('Y-m-d')) {
+            throw new InvalidArgumentException("Não é possível registrar uma visita com data futura.");
         }
 
-        if (!$this->repository->funcionarioExists($dto->funcionarioId)) {
-            throw new InvalidArgumentException("Funcionário não encontrado ou inativo.");
-        }
-
-        $coleta = new ColetaDomiciliar(
+        return $this->repository->create(new ColetaDomiciliar(
             id: null,
-            funcionarioId: $dto->funcionarioId,
             doadoraId: $dto->doadoraId,
+            funcionarioId: $funcionarioId,
             data: $dto->data,
-            horaColeta: $dto->horaColeta,
-            volumeDoado: $dto->volumeDoado,
-            status: $dto->status
+            dataColetaSangue: $dto->dataColetaSangue,
+            frascosNovos: $dto->frascosNovos,
+            frascosEsterilizados: $dto->frascosEsterilizados
+        ));
+    }
+
+    public function agendar(AgendarVisitaDTO $dto, int $funcionarioId): int
+    {
+        $doadora = $this->validarDoadora($dto->doadoraId);
+        $this->validarDiaDaZona($doadora, $dto->data);
+
+        if ($dto->data < date('Y-m-d')) {
+            throw new InvalidArgumentException("Não é possível agendar visita em data passada.");
+        }
+        if ($this->repository->agendadaExists($dto->doadoraId, $dto->data)) {
+            throw new InvalidArgumentException("Esta doadora já tem visita agendada neste dia.");
+        }
+
+        return $this->repository->create(new ColetaDomiciliar(
+            id: null,
+            doadoraId: $dto->doadoraId,
+            funcionarioId: $funcionarioId,
+            data: $dto->data,
+            dataColetaSangue: null,
+            frascosNovos: 0,
+            frascosEsterilizados: 0,
+            status: StatusVisitaEnum::AGENDADA->value
+        ));
+    }
+
+    public function realizar(int $visitaId, RealizarVisitaDTO $dto, int $funcionarioId): void
+    {
+        $visita = $this->getAgendada($visitaId);
+        $doadora = $this->validarDoadora((int) $visita['doadora_id']);
+        $this->validarDiaDaZona($doadora, $dto->data);
+        if ($dto->data > date('Y-m-d')) {
+            throw new InvalidArgumentException("A visita só pode ser registrada a partir do dia em que acontece.");
+        }
+
+        $this->repository->realizar(
+            $visitaId,
+            $funcionarioId,
+            $dto->data,
+            $dto->dataColetaSangue,
+            $dto->frascosNovos,
+            $dto->frascosEsterilizados,
+            $dto->frascosRecebidos
         );
-
-        return $this->repository->create($coleta);
     }
 
-    public function findById(int $id): ?array
+    public function cancelar(int $visitaId): void
     {
-        return $this->repository->findById($id);
+        $this->getAgendada($visitaId);
+        $this->repository->updateStatus($visitaId, StatusVisitaEnum::CANCELADA->value);
     }
 
-    public function findAll(?string $status = null): array
+    public function registrarFrasco(int $visitaId, CreateFrascoLeiteCruDTO $dto): int
     {
-        $statusEnum = null;
+        $visita = $this->repository->findById($visitaId);
 
-        if ($status !== null) {
-            $statusEnum = StatusColetaEnum::tryFrom($status);
-            if ($statusEnum === null) {
-                throw new InvalidArgumentException("Status inválido. Use: agendada, realizada ou cancelada.");
-            }
+        if ($visita === null) {
+            throw new InvalidArgumentException("Visita de coleta não encontrada.");
+        }
+        if ($visita['status'] !== StatusVisitaEnum::REALIZADA->value) {
+            throw new InvalidArgumentException("Só é possível registrar frascos em visita realizada.");
+        }
+        if ($visita['doadora_status'] !== StatusDoadoraEnum::ATIVA->value) {
+            throw new InvalidArgumentException("Só é possível registrar leite de doadora ativa (triagem conforme e sorologia normal).");
         }
 
-        return $this->repository->findAll($statusEnum);
+        return $this->frascoRepository->create(new FrascoLeiteCru(
+            id: null,
+            visitaColetaId: $visitaId,
+            dataHoraPrimeiraColeta: $dto->dataHoraPrimeiraColeta,
+            volumeMl: $dto->volumeMl,
+            formaExtracao: $dto->formaExtracao,
+            condPrestocagem: $dto->condPrestocagem,
+            estado: $dto->estado,
+            classificacao: TipoLeiteEnum::porDataDoParto($visita['data_parto'], $dto->dataHoraPrimeiraColeta)->value,
+            data: $dto->data,
+            responsavel: $dto->responsavel
+        ));
     }
 
-    public function update(int $id, UpdateColetaDomiciliarDTO $dto): bool
+    public function findAll(): array
     {
-        $coleta = $this->repository->findById($id);
-
-        if ($coleta === null) {
-            throw new InvalidArgumentException("Coleta não encontrada.");
-        }
-
-        $data = $dto->toArray();
-
-        if ($dto->status === StatusColetaEnum::REALIZADA) {
-            $horaColeta = $dto->horaColeta ?? $coleta['hora_coleta'];
-            $volumeDoado = $dto->volumeDoado ?? $coleta['volume_doado'];
-
-            if ($horaColeta === null) {
-                throw new InvalidArgumentException("Horário é obrigatório para coleta realizada.");
-            }
-            if ($volumeDoado === null) {
-                throw new InvalidArgumentException("Volume doado é obrigatório para coleta realizada.");
-            }
-        }
-
-        return $this->repository->update($id, $data);
+        return $this->repository->findAll();
     }
 
-    public function delete(int $id): bool
+    public function findFrascos(?string $status): array
     {
-        $coleta = $this->repository->findById($id);
+        return $this->frascoRepository->findAll($status);
+    }
 
-        if ($coleta === null) {
-            throw new InvalidArgumentException("Coleta não encontrada.");
+    private const DIAS_DA_SEMANA = [1 => 'segunda', 2 => 'terca', 3 => 'quarta', 4 => 'quinta', 5 => 'sexta', 6 => 'sabado', 7 => 'domingo'];
+
+    private function validarDiaDaZona(array $doadora, string $data): void
+    {
+        $dia = self::DIAS_DA_SEMANA[(int) (new \DateTimeImmutable($data))->format('N')];
+
+        if ($dia !== $doadora['dia_da_semana']) {
+            throw new InvalidArgumentException(
+                "A {$doadora['zona_nome']} é visitada às {$doadora['dia_da_semana']}s-feiras: escolha uma data nesse dia da semana."
+            );
+        }
+    }
+
+    private function validarDoadora(int $doadoraId): array
+    {
+        $doadora = $this->doadoraRepository->findById($doadoraId);
+
+        if ($doadora === null) {
+            throw new InvalidArgumentException("Doadora não encontrada.");
+        }
+        if (in_array($doadora['status'], [StatusDoadoraEnum::REMOVIDA->value, StatusDoadoraEnum::INAPTA->value], true)) {
+            throw new InvalidArgumentException("Doadora inapta ou removida não recebe visitas de coleta.");
         }
 
-        if ($coleta['status'] === StatusColetaEnum::CANCELADA->value) {
-            throw new InvalidArgumentException("Coleta já está cancelada.");
+        return $doadora;
+    }
+
+    private function getAgendada(int $visitaId): array
+    {
+        $visita = $this->repository->findById($visitaId);
+
+        if ($visita === null) {
+            throw new InvalidArgumentException("Visita de coleta não encontrada.");
+        }
+        if ($visita['status'] !== StatusVisitaEnum::AGENDADA->value) {
+            throw new InvalidArgumentException("Esta visita não está agendada (já foi realizada ou cancelada).");
         }
 
-        if ($coleta['status'] === StatusColetaEnum::REALIZADA->value) {
-            throw new InvalidArgumentException("Não é possível cancelar uma coleta já realizada.");
-        }
-
-        return $this->repository->delete($id);
+        return $visita;
     }
 }

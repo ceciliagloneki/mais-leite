@@ -13,31 +13,20 @@ final class LoginDTO
 
     public function __construct(array $data)
     {
-        $this->validateRequired($data);
+        $email = trim((string) ($data['email'] ?? $data['usuario'] ?? ''));
+        $senha = (string) ($data['senha'] ?? '');
 
-        $this->email = $this->validateEmail($data['email']);
-        $this->senha = (string) $data['senha'];
-    }
-
-    private function validateRequired(array $data): void
-    {
-        $required = ['email', 'senha'];
-
-        foreach ($required as $field) {
-            if (!isset($data[$field]) || $data[$field] === '') {
-                throw new InvalidArgumentException("Campo '{$field}' é obrigatório.");
-            }
+        if ($email === '') {
+            throw new InvalidArgumentException('E-mail é obrigatório.');
         }
-    }
-
-    private function validateEmail(string $email): string
-    {
-        $email = strtolower(trim($email));
-
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new InvalidArgumentException("E-mail inválido.");
+            throw new InvalidArgumentException('E-mail inválido.');
+        }
+        if ($senha === '') {
+            throw new InvalidArgumentException('Senha é obrigatória.');
         }
 
-        return $email;
+        $this->email = strtolower($email);
+        $this->senha = $senha;
     }
 }

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Utils;
 
-/**
- * Helper para padronizar respostas HTTP em JSON.
- */
 final class Response
 {
     public static function json(mixed $data, int $status = 200): void

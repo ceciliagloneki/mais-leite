@@ -6,98 +6,90 @@ namespace MaisLeiteBackend\Routes;
 
 use MaisLeiteBackend\Middlewares\AuthMiddleware;
 use MaisLeiteBackend\Utils\Response;
-
-/**
- * Roteador simples: associa método HTTP + caminho a um callback.
- * Suporta parâmetros dinâmicos no formato /recurso/{id}.
- * Rotas podem ser marcadas como protegidas, exigindo autenticação.
- */
 final class Router
 {
-    /** @var array<string, array<int, array{pattern: string, handler: callable, protected: bool}>> */
     private array $routes = [];
-
-    public function get(string $path, callable $handler, bool $protected = true): void
+    public function get(string $path, callable $handler): void
     {
-        $this->add('GET', $path, $handler, $protected);
+        $this->add('GET', $path, $handler);
     }
-
-    public function post(string $path, callable $handler, bool $protected = true): void
+    public function post(string $path, callable $handler): void
     {
-        $this->add('POST', $path, $handler, $protected);
+        $this->add('POST', $path, $handler);
     }
-
-    public function put(string $path, callable $handler, bool $protected = true): void
+    public function put(string $path, callable $handler): void
     {
-        $this->add('PUT', $path, $handler, $protected);
+        $this->add('PUT', $path, $handler);
     }
-
-    public function delete(string $path, callable $handler, bool $protected = true): void
+    public function delete(string $path, callable $handler): void
     {
-        $this->add('DELETE', $path, $handler, $protected);
+        $this->add('DELETE', $path, $handler);
     }
-
-    private function add(string $method, string $path, callable $handler, bool $protected): void
+    public function protectedGet(string $path, callable $handler): void
     {
-        $this->routes[$method][] = [
-            'pattern' => $this->normalize($path),
-            'handler' => $handler,
-            'protected' => $protected,
-        ];
+        $this->add('GET', $path, $handler, true);
     }
-
+    public function protectedPost(string $path, callable $handler): void
+    {
+        $this->add('POST', $path, $handler, true);
+    }
+    public function protectedPut(string $path, callable $handler): void
+    {
+        $this->add('PUT', $path, $handler, true);
+    }
+    public function protectedDelete(string $path, callable $handler): void
+    {
+        $this->add('DELETE', $path, $handler, true);
+    }
+    public function protectedPatch(string $path, callable $handler): void
+    {
+        $this->add('PATCH', $path, $handler, true);
+    }
+    public function patch(string $path, callable $handler): void
+    {
+        $this->add('PATCH', $path, $handler);
+    }
+    private function add(string $method, string $path, callable $handler, bool $protected = false): void
+    {
+        $this->routes[$method][] = ['pattern' => $this->normalize($path), 'handler' => $handler, 'protected' => $protected];
+    }
     public function dispatch(string $method, string $uri): void
     {
         $path = $this->normalize(parse_url($uri, PHP_URL_PATH) ?? '/');
-
         foreach ($this->routes[$method] ?? [] as $route) {
             $params = $this->match($route['pattern'], $path);
-
             if ($params !== null) {
-                if ($route['protected']) {
-                    AuthMiddleware::handle();
+                if ($route['protected'] && !(new AuthMiddleware())->handle()) {
+                    return;
                 }
-
-                ($route['handler'])(...$params);
+                $route['handler'](...$params);
                 return;
             }
         }
-
         Response::error('Rota não encontrada.', 404);
     }
-
-    /**
-     * Tenta casar o caminho requisitado com o padrão da rota.
-     * Retorna os parâmetros capturados, ou null quando não há correspondência.
-     *
-     * @return array<int, string|int>|null
-     */
     private function match(string $pattern, string $path): ?array
     {
         $patternParts = explode('/', $pattern);
         $pathParts = explode('/', $path);
-
         if (count($patternParts) !== count($pathParts)) {
             return null;
         }
-
         $params = [];
-
         foreach ($patternParts as $index => $part) {
             if (preg_match('/^\{[^}]+\}$/', $part) === 1) {
-                $value = $pathParts[$index];
-                $params[] = ctype_digit($value) ? (int) $value : $value;
+                if (!ctype_digit($pathParts[$index])) {
+                    return null;
+                }
+                $params[] = (int) $pathParts[$index];
                 continue;
             }
-
             if ($part !== $pathParts[$index]) {
                 return null;
             }
         }
-
         return $params;
     }
-
     private function normalize(string $path): string
     {
         $path = '/' . trim($path, '/');

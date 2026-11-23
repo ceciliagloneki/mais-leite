@@ -4,91 +4,109 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Controllers;
 
-use InvalidArgumentException;
+use MaisLeiteBackend\Dtos\Distribuicoes\CreateAdministracaoDTO;
+use MaisLeiteBackend\Dtos\Distribuicoes\CreateAlocacaoDTO;
+use MaisLeiteBackend\Dtos\Distribuicoes\CreateDevolucaoDTO;
 use MaisLeiteBackend\Dtos\Distribuicoes\CreateDistribuicaoDTO;
-use MaisLeiteBackend\Dtos\Distribuicoes\DistribuicaoListResponseDTO;
-use MaisLeiteBackend\Dtos\Distribuicoes\DistribuicaoResponseDTO;
-use MaisLeiteBackend\Dtos\Distribuicoes\UpdateDistribuicaoDTO;
+use MaisLeiteBackend\Middlewares\AuthMiddleware;
+use MaisLeiteBackend\Repositories\DemandaRepository;
+use MaisLeiteBackend\Repositories\DevolucaoFrascosRepository;
 use MaisLeiteBackend\Repositories\DistribuicaoRepository;
+use MaisLeiteBackend\Repositories\FrascoDistribuicaoRepository;
+use MaisLeiteBackend\Repositories\FrascoPasteurizadoRepository;
+use MaisLeiteBackend\Repositories\HospitalRepository;
+use MaisLeiteBackend\Repositories\PrescricaoRepository;
 use MaisLeiteBackend\Services\DistribuicaoService;
 use MaisLeiteBackend\Utils\Response;
+use InvalidArgumentException;
 
 final class DistribuicaoController
 {
     private DistribuicaoService $service;
 
-    public function __construct () {
-        $this->service = new DistribuicaoService(new DistribuicaoRepository());
+    public function __construct()
+    {
+        $this->service = new DistribuicaoService(
+            new DistribuicaoRepository(),
+            new FrascoDistribuicaoRepository(),
+            new FrascoPasteurizadoRepository(),
+            new PrescricaoRepository(),
+            new DemandaRepository(),
+            new HospitalRepository(),
+            new DevolucaoFrascosRepository()
+        );
     }
 
-    public function create () : void {
+    public function alocacoes(): void
+    {
+        Response::json($this->service->findAlocacoes());
+    }
+
+    public function alocar(): void
+    {
         try {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
-            $dto  = new CreateDistribuicaoDTO($data);
-            $id   = $this->service->create($dto);
+            $id = $this->service->alocar(new CreateAlocacaoDTO($data));
 
-            $distribuicao = $this->service->findById($id);
-            Response::json(DistribuicaoResponseDTO::fromArray($distribuicao), 201);
+            Response::json(['id' => $id], 201);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }
     }
 
-    public function findAll() : void {
+    public function administrar(int $id): void
+    {
         try {
-            $demanda = isset($_GET['demanda_id']) && ctype_digit((string) $_GET['demanda_id']) ? (int) $_GET['demanda_id'] : null;
-            $data    = $_GET['data'] ?? null;
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $this->service->registrarAdministracao($id, new CreateAdministracaoDTO($data));
 
-            $distribuicoes = $this->service->findAll($demanda, $data);
-
-            Response::json(DistribuicaoListResponseDTO::fromArray($distribuicoes));
+            Response::json(['id' => $id]);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }
     }
 
-    public function findById (int $id) : void {
-        $distribuicao = $this->service->findById($id);
+    public function findAll(): void
+    {
+        Response::json($this->service->findAll());
+    }
 
-        if ($distribuicao === null) {
-            Response::error("Distribuição não encontrada!", 404);
+    public function findById(int $id): void
+    {
+        $ficha = $this->service->findById($id);
+
+        if ($ficha === null) {
+            Response::error("Ficha de distribuição não encontrada.", 404);
             return;
         }
 
-        Response::json(DistribuicaoResponseDTO::fromArray($distribuicao));
+        Response::json($ficha);
     }
 
-    public function update (int $id) : void {
+    public function create(): void
+    {
         try {
-            $distribuicao = $this->service->findById($id);
-
-            if ($distribuicao === null) {
-                Response::error("Distribuição não encontrada!", 404);
-                return;
-            }
-
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
-            $dto  = new UpdateDistribuicaoDTO($data);
-            $this->service->update($id, $dto);
+            $id = $this->service->create(new CreateDistribuicaoDTO($data), AuthMiddleware::$funcionarioId);
 
-            $distribuicao = $this->service->findById($id);
-            Response::json(DistribuicaoResponseDTO::fromArray($distribuicao));
+            Response::json(['id' => $id], 201);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }
     }
 
-    public function delete (int $id) : void {
+    public function devolucoes(): void
+    {
+        Response::json($this->service->findDevolucoes());
+    }
+
+    public function registrarDevolucao(): void
+    {
         try {
-            $distribuicao = $this->service->findById($id);
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $id = $this->service->registrarDevolucao(new CreateDevolucaoDTO($data));
 
-            if ($distribuicao === null) {
-                Response::error("Distribuição não encontrada!", 404);
-                return;
-            }
-
-            $this->service->delete($id);
-            Response::json(['message' => 'Distribuição deletada com sucesso!']);
+            Response::json(['id' => $id], 201);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }

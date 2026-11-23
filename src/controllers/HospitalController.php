@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Controllers;
 
+use MaisLeiteBackend\Dtos\Hospitais\CreateDemandaDTO;
 use MaisLeiteBackend\Dtos\Hospitais\CreateHospitalDTO;
-use MaisLeiteBackend\Dtos\Hospitais\UpdateHospitalDTO;
-use MaisLeiteBackend\Dtos\Hospitais\HospitalResponseDTO;
-use MaisLeiteBackend\Dtos\Hospitais\HospitalListResponseDTO;
+use MaisLeiteBackend\Dtos\Hospitais\CreatePrescricaoDTO;
+use MaisLeiteBackend\Repositories\DemandaRepository;
 use MaisLeiteBackend\Repositories\HospitalRepository;
+use MaisLeiteBackend\Repositories\PrescricaoRepository;
 use MaisLeiteBackend\Services\HospitalService;
 use MaisLeiteBackend\Utils\Response;
 use InvalidArgumentException;
@@ -17,84 +18,73 @@ final class HospitalController
 {
     private HospitalService $service;
 
-    public function __construct() {
-        $this->service = new HospitalService(new HospitalRepository());
+    public function __construct()
+    {
+        $this->service = new HospitalService(
+            new HospitalRepository(),
+            new DemandaRepository(),
+            new PrescricaoRepository()
+        );
     }
 
-    public function create() : void {
+    public function findAll(): void
+    {
+        Response::json($this->service->findAll());
+    }
+
+    public function create(): void
+    {
         try {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $id = $this->service->create(new CreateHospitalDTO($data));
 
-            $dto = new CreateHospitalDTO($data);
-
-            $id = $this->service->create($dto);
-
-            $hospital = $this->service->findById($id);
-
-            Response::json(HospitalResponseDTO::fromArray($hospital), 201);
+            Response::json(['id' => $id], 201);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }
     }
 
-    public function findAll() : void {
+    public function update(int $id): void
+    {
         try {
-            $status = $_GET['status'] ?? null;
-
-            $hospital = $this->service->findAll($status);
-
-            Response::json(HospitalListResponseDTO::fromArray($hospital));
-        } catch (InvalidArgumentException $e) {
-            Response::error($e->getMessage(), 400);
-        }
-    }
-
-    public function findById(int $id) : void {
-        $hospital = $this->service->findById($id);
-
-        if ($hospital === null) {
-            Response::error("Hospital não Encontrado!", 400);
-            return;
-        }
-
-        Response::json(HospitalResponseDTO::fromArray($hospital));
-    }
-
-    public function update(int $id) : void {
-        try {
-            $hospital = $this->service->findById($id);
-
-            if ($hospital === null) {
-                Response::error("Hospital não encontrado!", 404);
-                return;
-            }
-
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $this->service->update($id, new CreateHospitalDTO($data));
 
-            $dto = new UpdateHospitalDTO($data);
-
-            $this->service->update($id, $dto);
-
-            $hospital = $this->service->findById($id);
-
-            Response::json(HospitalResponseDTO::fromArray($hospital));
+            Response::json(['id' => $id]);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }
     }
 
-    public function delete(int $id) : void {
+    public function demandas(): void
+    {
+        Response::json($this->service->findDemandas());
+    }
+
+    public function criarDemanda(): void
+    {
         try {
-            $hospital = $this->service->findById($id);
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $id = $this->service->createDemanda(new CreateDemandaDTO($data));
 
-            if ($hospital === null) {
-                Response::error("Hospital não encontrado!", 404);
-                return;
-            }
+            Response::json(['id' => $id], 201);
+        } catch (InvalidArgumentException $e) {
+            Response::error($e->getMessage(), 400);
+        }
+    }
 
-            $this->service->delete($id);
+    public function prescricoes(): void
+    {
+        Response::json($this->service->findPrescricoes());
+    }
 
-            Response::json(['message' => 'Hospital inativado com sucesso!']);
+    public function criarPrescricao(int $id): void
+    {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $prescricaoId = $this->service->createPrescricao($id, new CreatePrescricaoDTO($data));
+
+            Response::json(['id' => $prescricaoId], 201);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }

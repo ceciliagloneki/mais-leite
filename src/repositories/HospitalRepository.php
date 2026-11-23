@@ -4,93 +4,56 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Repositories;
 
-use MaisLeiteBackend\Models\Hospital;
 use MaisLeiteBackend\Database\Database;
-use MaisLeiteBackend\Enums\StatusEnum;
+use MaisLeiteBackend\Models\Hospital;
 use PDO;
 
-class HospitalRepository
+final class HospitalRepository
 {
     private PDO $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->db = Database::getConnection();
     }
 
-    public function create(Hospital $hospital) : int {
-        $sql = "INSERT INTO hospital (nome, telefone, status)
-                VALUES (:nome, :telefone, :status)";
-
-        $statement = $this->db->prepare($sql);
-        $statement->execute([
-            'nome'     => $hospital->nome,
-            'telefone' => $hospital->telefone,
-            'status'   => $hospital->status
-        ]);
+    public function create(Hospital $hospital): int
+    {
+        $stmt = $this->db->prepare("INSERT INTO hospital (nome, telefone) VALUES (:nome, :telefone)");
+        $stmt->execute(['nome' => $hospital->nome, 'telefone' => $hospital->telefone]);
 
         return (int) $this->db->lastInsertId();
     }
-    
-    public function findById(int $id) : ?array {
-        $sql = "SELECT id, nome, telefone, status
-                FROM hospital
-                WHERE id = :id";
 
-        $statement = $this->db->prepare($sql);
-        $statement->execute(['id' => $id]);
+    public function update(int $id, Hospital $hospital): bool
+    {
+        $stmt = $this->db->prepare("UPDATE hospital SET nome = :nome, telefone = :telefone WHERE id = :id");
 
-        $result = $statement->fetch();
-        
+        return $stmt->execute(['id' => $id, 'nome' => $hospital->nome, 'telefone' => $hospital->telefone]);
+    }
+
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM hospital WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+
+        $result = $stmt->fetch();
+
         return $result ?: null;
     }
 
-    public function findAll(?StatusEnum $status = null) : array {
-        $sql = "SELECT id, nome, telefone, status
-                FROM hospital";
-        
-        $params = [];
+    public function findByNome(string $nome): ?array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM hospital WHERE nome = :nome");
+        $stmt->execute(['nome' => $nome]);
 
-        if ($status !== null) {
-            $sql .= " WHERE status = :status";
-            $params['status'] = $status->value;
-        }
+        $result = $stmt->fetch();
 
-        $sql .= " ORDER BY nome ASC";
-
-        $statement = $this->db->prepare($sql);
-        $statement->execute($params);
-
-        return $statement->fetchAll();
+        return $result ?: null;
     }
 
-    public function update(int $id, array $data) : bool {
-        $fields = [];
-        $params = ['id' => $id];
-
-        foreach ($data as $key => $value) {
-            $fields[] = "{$key} = :{$key}";
-            $params[$key] = $value;
-        }
-
-        $sql = "UPDATE hospital
-                SET " . implode(', ', $fields) .
-                " WHERE id = :id";
-
-        $statement = $this->db->prepare($sql);
-        
-        return $statement->execute($params);
-    }
-
-    public function delete(int $id) : bool {
-        $sql = "UPDATE hospital 
-                SET status = :status 
-                WHERE id = :id";
-            
-        $statement = $this->db->prepare($sql);
-
-        return $statement->execute([
-            'id'     => $id,
-            'status' => StatusEnum::INATIVO->value
-        ]);
+    public function findAll(): array
+    {
+        return $this->db->query("SELECT * FROM hospital ORDER BY nome")->fetchAll();
     }
 }

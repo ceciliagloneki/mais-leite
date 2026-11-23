@@ -4,94 +4,79 @@ declare(strict_types=1);
 
 use MaisLeiteBackend\Controllers\AuthController;
 use MaisLeiteBackend\Controllers\ColetaDomiciliarController;
-use MaisLeiteBackend\Controllers\ControleFrascoController;
-use MaisLeiteBackend\Controllers\FrascoController;
-use MaisLeiteBackend\Controllers\HealthController;
-use MaisLeiteBackend\Controllers\FuncionarioController;
-use MaisLeiteBackend\Controllers\HospitalController;
-use MaisLeiteBackend\Controllers\DemandaController;
 use MaisLeiteBackend\Controllers\DistribuicaoController;
-use MaisLeiteBackend\Controllers\PrescricaoController;
+use MaisLeiteBackend\Controllers\DoadoraController;
+use MaisLeiteBackend\Controllers\FuncionarioController;
+use MaisLeiteBackend\Controllers\HealthController;
+use MaisLeiteBackend\Controllers\HospitalController;
+use MaisLeiteBackend\Controllers\PasteurizacaoController;
+use MaisLeiteBackend\Controllers\RecepcaoController;
+use MaisLeiteBackend\Controllers\RelatorioController;
 use MaisLeiteBackend\Routes\Router;
 
-/**
- * Registro central das rotas da aplicação.
- * Novos endpoints devem ser adicionados aqui.
- *
- * O terceiro argumento ($protected) indica se a rota exige autenticação.
- * Por padrão as rotas são protegidas; rotas públicas devem passar `false`.
- */
 $router = new Router();
 
 $router->get('/', [new HealthController(), 'index']);
-$router->get('/', [new HealthController(), 'index'], false);
 
-// Hospitais
-$hospital_controller = new HospitalController;
-$router->post('/hospital', [$hospital_controller, 'create']);
-$router->get('/hospital', [$hospital_controller, 'findAll']);
-$router->get('/hospital/{id}', [$hospital_controller, 'findById']);
-$router->put('/hospital/{id}', [$hospital_controller, 'update']);
-$router->delete('/hospital/{id}', [$hospital_controller, 'delete']);
+$router->post('/auth/login', [new AuthController(), 'login']);
 
-// Autenticação (rota pública)
-$authController = new AuthController();
-$router->post('/auth/login', [$authController, 'login'], false);
+$funcionario = new FuncionarioController();
+$router->protectedGet('/funcionarios', [$funcionario, 'findAll']);
+$router->protectedGet('/funcionarios/{id}', [$funcionario, 'findById']);
+$router->protectedPost('/funcionarios', [$funcionario, 'create']);
+$router->protectedPut('/funcionarios/{id}', [$funcionario, 'update']);
+$router->protectedDelete('/funcionarios/{id}', [$funcionario, 'delete']);
 
-// Funcionários (rotas protegidas)
-$funcionarioController = new FuncionarioController();
-$router->post('/funcionarios', [$funcionarioController, 'create']);
-$router->get('/funcionarios', [$funcionarioController, 'findAll']);
-$router->get('/funcionarios/{id}', [$funcionarioController, 'findById']);
-$router->put('/funcionarios/{id}', [$funcionarioController, 'update']);
-$router->delete('/funcionarios/{id}', [$funcionarioController, 'delete']);
+$doadora = new DoadoraController();
+$router->protectedGet('/zonas', [$doadora, 'zonas']);
+$router->protectedGet('/doadoras', [$doadora, 'findAll']);
+$router->protectedGet('/doadoras/{id}', [$doadora, 'findById']);
+$router->protectedPost('/doadoras', [$doadora, 'create']);
+$router->protectedPut('/doadoras/{id}', [$doadora, 'update']);
+$router->protectedPost('/doadoras/{id}/triagem', [$doadora, 'triagem']);
+$router->protectedPost('/doadoras/{id}/sorologias', [$doadora, 'sorologia']);
 
-// Coletas Domiciliares (rotas protegidas)
-$coletaController = new ColetaDomiciliarController();
-$router->post('/coletas-domiciliares', [$coletaController, 'create']);
-$router->get('/coletas-domiciliares', [$coletaController, 'findAll']);
-$router->get('/coletas-domiciliares/{id}', [$coletaController, 'findById']);
-$router->put('/coletas-domiciliares/{id}', [$coletaController, 'update']);
-$router->delete('/coletas-domiciliares/{id}', [$coletaController, 'delete']);
+$coleta = new ColetaDomiciliarController();
+$router->protectedGet('/coletas', [$coleta, 'findAll']);
+$router->protectedPost('/coletas', [$coleta, 'create']);
+$router->protectedPost('/coletas/agendar', [$coleta, 'agendar']);
+$router->protectedPut('/coletas/{id}/realizar', [$coleta, 'realizar']);
+$router->protectedPut('/coletas/{id}/cancelar', [$coleta, 'cancelar']);
+$router->protectedPost('/coletas/{id}/frascos', [$coleta, 'registrarFrasco']);
+$router->protectedGet('/frascos-crus', [$coleta, 'frascos']);
 
-// Demandas
-$demanda_controller = new DemandaController();
-$router->post('/demandas', [$demanda_controller, 'create']);
-$router->get('/demandas', [$demanda_controller, 'findAll']);
-$router->get('/demandas/{id}', [$demanda_controller, 'findById']);
-$router->put('/demandas/{id}', [$demanda_controller, 'update']);
-$router->delete('/demandas/{id}', [$demanda_controller, 'delete']);
+$recepcao = new RecepcaoController();
+$router->protectedGet('/recepcoes', [$recepcao, 'findAll']);
+$router->protectedPost('/recepcoes', [$recepcao, 'create']);
 
-// Prescrições
-$prescricao_controller = new PrescricaoController();
-$router->post('/prescricoes', [$prescricao_controller, 'create']);
-$router->get('/prescricoes', [$prescricao_controller, 'findAll']);
-$router->get('/prescricoes/{id}', [$prescricao_controller, 'findById']);
-$router->put('/prescricoes/{id}', [$prescricao_controller, 'update']);
-$router->delete('/prescricoes/{id}', [$prescricao_controller, 'delete']);
+$pasteurizacao = new PasteurizacaoController();
+$router->protectedGet('/pasteurizacoes', [$pasteurizacao, 'findAll']);
+$router->protectedPost('/pasteurizacoes', [$pasteurizacao, 'create']);
+$router->protectedPost('/pasteurizacoes/{id}/frascos', [$pasteurizacao, 'reenvasar']);
+$router->protectedGet('/frascos-pasteurizados', [$pasteurizacao, 'frascos']);
+$router->protectedPost('/frascos-pasteurizados/{id}/analise', [$pasteurizacao, 'analisar']);
 
-// Distribuições
-$distribuicao_controller = new DistribuicaoController();
-$router->post('/distribuicoes', [$distribuicao_controller, 'create']);
-$router->get('/distribuicoes', [$distribuicao_controller, 'findAll']);
-$router->get('/distribuicoes/{id}', [$distribuicao_controller, 'findById']);
-$router->put('/distribuicoes/{id}', [$distribuicao_controller, 'update']);
-$router->delete('/distribuicoes/{id}', [$distribuicao_controller, 'delete']);
+$hospital = new HospitalController();
+$router->protectedGet('/hospitais', [$hospital, 'findAll']);
+$router->protectedPost('/hospitais', [$hospital, 'create']);
+$router->protectedPut('/hospitais/{id}', [$hospital, 'update']);
+$router->protectedGet('/demandas', [$hospital, 'demandas']);
+$router->protectedPost('/demandas', [$hospital, 'criarDemanda']);
+$router->protectedGet('/prescricoes', [$hospital, 'prescricoes']);
+$router->protectedPost('/demandas/{id}/prescricoes', [$hospital, 'criarPrescricao']);
 
-// Controle de Frascos
-$controleFrascoController = new ControleFrascoController();
-$router->post('/controle-frascos', [$controleFrascoController, 'create']);
-$router->get('/controle-frascos', [$controleFrascoController, 'findAll']);
-$router->get('/controle-frascos/{id}', fn(string $id) => $controleFrascoController->findById((int) $id));
-$router->put('/controle-frascos/{id}', fn(string $id) => $controleFrascoController->update((int) $id));
-$router->delete('/controle-frascos/{id}', fn(string $id) => $controleFrascoController->delete((int) $id));
+$distribuicao = new DistribuicaoController();
+$router->protectedGet('/alocacoes', [$distribuicao, 'alocacoes']);
+$router->protectedPost('/alocacoes', [$distribuicao, 'alocar']);
+$router->protectedPut('/alocacoes/{id}/administracao', [$distribuicao, 'administrar']);
+$router->protectedGet('/distribuicoes', [$distribuicao, 'findAll']);
+$router->protectedGet('/distribuicoes/{id}', [$distribuicao, 'findById']);
+$router->protectedPost('/distribuicoes', [$distribuicao, 'create']);
+$router->protectedGet('/devolucoes', [$distribuicao, 'devolucoes']);
+$router->protectedPost('/devolucoes', [$distribuicao, 'registrarDevolucao']);
 
-// Frascos
-$frascoController = new FrascoController();
-$router->post('/frascos', [$frascoController, 'create']);
-$router->get('/frascos', [$frascoController, 'findAll']);
-$router->get('/frascos/{id}', fn(string $id) => $frascoController->findById((int) $id));
-$router->put('/frascos/{id}', fn(string $id) => $frascoController->update((int) $id));
-$router->delete('/frascos/{id}', fn(string $id) => $frascoController->delete((int) $id));
+$relatorio = new RelatorioController();
+$router->protectedGet('/dashboard', [$relatorio, 'dashboard']);
+$router->protectedGet('/rastreabilidade/{id}', [$relatorio, 'rastreabilidade']);
 
 return $router;

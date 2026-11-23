@@ -6,11 +6,10 @@ namespace MaisLeiteBackend\Dtos\Auth;
 
 final class LoginResponseDTO
 {
-    public static function fromArray(array $funcionario, string $token, string $tokenType = 'Bearer'): array
+    public static function fromFuncionario(array $funcionario, string $token): array
     {
         return [
             'token' => $token,
-            'token_type' => $tokenType,
             'funcionario' => [
                 'id' => (int) $funcionario['id'],
                 'nome' => $funcionario['nome'],

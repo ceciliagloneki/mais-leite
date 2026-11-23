@@ -4,75 +4,86 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Services;
 
+use MaisLeiteBackend\Dtos\Hospitais\CreateDemandaDTO;
 use MaisLeiteBackend\Dtos\Hospitais\CreateHospitalDTO;
-use MaisLeiteBackend\Dtos\Hospitais\UpdateHospitalDTO;
-use MaisLeiteBackend\Enums\StatusEnum;
+use MaisLeiteBackend\Dtos\Hospitais\CreatePrescricaoDTO;
+use MaisLeiteBackend\Models\Demanda;
 use MaisLeiteBackend\Models\Hospital;
+use MaisLeiteBackend\Models\Prescricao;
+use MaisLeiteBackend\Repositories\DemandaRepository;
 use MaisLeiteBackend\Repositories\HospitalRepository;
-
+use MaisLeiteBackend\Repositories\PrescricaoRepository;
 use InvalidArgumentException;
-
 
 final class HospitalService
 {
     public function __construct(
-        private readonly HospitalRepository $repository
+        private readonly HospitalRepository $repository,
+        private readonly DemandaRepository $demandaRepository,
+        private readonly PrescricaoRepository $prescricaoRepository
     ) {}
 
-    public function create(CreateHospitalDTO $dto) : int {
-        $hospital = new Hospital (
-            id      : null,
-            nome    : $dto->nome,
-            telefone: $dto->telefone,
-            status  : StatusEnum::ATIVO->value
-        );
-
-        return $this->repository->create($hospital);
+    public function create(CreateHospitalDTO $dto): int
+    {
+        return $this->repository->create(new Hospital(id: null, nome: $dto->nome, telefone: $dto->telefone));
     }
 
-    public function findById(int $id) : ?array {
-        return $this->repository->findById($id);
-    }
-
-    public function findAll(?string $status = null) : array {
-        $statusEnum = null;
-
-        if ($status !== null && $status !== 'todos') {
-            $statusEnum = StatusEnum::tryFrom($status);
-
-            if ($statusEnum === null)
-                throw new InvalidArgumentException("Status Inválido. Use: ativo, inativo ou todos!");
+    public function update(int $id, CreateHospitalDTO $dto): bool
+    {
+        if ($this->repository->findById($id) === null) {
+            throw new InvalidArgumentException("Hospital não encontrado.");
         }
 
-        return $this->repository->findAll($statusEnum);
+        return $this->repository->update($id, new Hospital(id: $id, nome: $dto->nome, telefone: $dto->telefone));
     }
 
-    public function update(int $id, UpdateHospitalDTO $dto) : bool {
-        $hospital = $this->repository->findById($id);
-
-        if ($hospital === null)
-            throw new InvalidArgumentException("Hospital não Encontrado!");
-
-        if ($hospital['status'] === StatusEnum::INATIVO->value)
-            throw new InvalidArgumentException("Hospital está Inativo!");
-
-        $data = $dto->toArray();
-
-        if ($data === [])
-            return true;
-        
-        return $this->repository->update($id, $data);
+    public function findAll(): array
+    {
+        return $this->repository->findAll();
     }
 
-    public function delete(int $id) : bool {
-        $hospital = $this->repository->findById($id);
+    public function createDemanda(CreateDemandaDTO $dto): int
+    {
+        if ($this->repository->findById($dto->hospitalId) === null) {
+            throw new InvalidArgumentException("Hospital não encontrado.");
+        }
 
-        if ($hospital === null)
-            throw new InvalidArgumentException("Hospital não Encontrado!");
+        return $this->demandaRepository->create(new Demanda(
+            id: null,
+            hospitalId: $dto->hospitalId,
+            dataDemanda: $dto->dataDemanda,
+            volumeTotal: $dto->volumeTotal,
+            numeroDeBebes: $dto->numeroDeBebes
+        ));
+    }
 
-        if ($hospital['status'] === StatusEnum::INATIVO->value)
-            throw new InvalidArgumentException("Hospital já está Inativo!");
+    public function findDemandas(): array
+    {
+        return $this->demandaRepository->findAll();
+    }
 
-        return $this->repository->delete($id);
+    public function createPrescricao(int $demandaId, CreatePrescricaoDTO $dto): int
+    {
+        $demanda = $this->demandaRepository->findById($demandaId);
+
+        if ($demanda === null) {
+            throw new InvalidArgumentException("Demanda não encontrada.");
+        }
+        if ($demanda['status'] !== 'pendente') {
+            throw new InvalidArgumentException("Esta demanda já foi atendida.");
+        }
+
+        return $this->prescricaoRepository->create(new Prescricao(
+            id: null,
+            demandaId: $demandaId,
+            nomeDoRn: $dto->nomeDoRn,
+            volumePrescrito: $dto->volumePrescrito,
+            tipoLeite: $dto->tipoLeite
+        ));
+    }
+
+    public function findPrescricoes(): array
+    {
+        return $this->prescricaoRepository->findAll();
     }
 }

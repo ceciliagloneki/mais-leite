@@ -4,101 +4,183 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Services;
 
-use InvalidArgumentException;
+use MaisLeiteBackend\Database\Database;
+use MaisLeiteBackend\Dtos\Distribuicoes\CreateAdministracaoDTO;
+use MaisLeiteBackend\Dtos\Distribuicoes\CreateAlocacaoDTO;
+use MaisLeiteBackend\Dtos\Distribuicoes\CreateDevolucaoDTO;
 use MaisLeiteBackend\Dtos\Distribuicoes\CreateDistribuicaoDTO;
-use MaisLeiteBackend\Dtos\Distribuicoes\UpdateDistribuicaoDTO;
+use MaisLeiteBackend\Enums\StatusFrascoPasteurizadoEnum;
+use MaisLeiteBackend\Enums\TipoLeiteEnum;
+use MaisLeiteBackend\Models\DevolucaoFrascos;
 use MaisLeiteBackend\Models\Distribuicao;
+use MaisLeiteBackend\Models\FrascoDistribuicao;
+use MaisLeiteBackend\Repositories\DemandaRepository;
+use MaisLeiteBackend\Repositories\DevolucaoFrascosRepository;
 use MaisLeiteBackend\Repositories\DistribuicaoRepository;
+use MaisLeiteBackend\Repositories\FrascoDistribuicaoRepository;
+use MaisLeiteBackend\Repositories\FrascoPasteurizadoRepository;
+use MaisLeiteBackend\Repositories\HospitalRepository;
+use MaisLeiteBackend\Repositories\PrescricaoRepository;
+use InvalidArgumentException;
 
 final class DistribuicaoService
 {
-    public function __construct (
-        private readonly DistribuicaoRepository $repo
+    public function __construct(
+        private readonly DistribuicaoRepository $repository,
+        private readonly FrascoDistribuicaoRepository $alocacaoRepository,
+        private readonly FrascoPasteurizadoRepository $frascoRepository,
+        private readonly PrescricaoRepository $prescricaoRepository,
+        private readonly DemandaRepository $demandaRepository,
+        private readonly HospitalRepository $hospitalRepository,
+        private readonly DevolucaoFrascosRepository $devolucaoRepository
     ) {}
 
-    public function create(CreateDistribuicaoDTO $dto) : int {
-        if (!$this->repo->demandaExists($dto->demandaId))
-            throw new InvalidArgumentException("Demanda não encontrada!");
+    public function alocar(CreateAlocacaoDTO $dto): int
+    {
+        $prescricao = $this->prescricaoRepository->findById($dto->prescricaoId);
+        $frasco = $this->frascoRepository->findById($dto->frascoPasteurizadoId);
 
-        $this->validateNotFuture($dto->data, $dto->horario);
+        if ($prescricao === null) {
+            throw new InvalidArgumentException("Prescrição não encontrada.");
+        }
+        if ($prescricao['demanda_status'] !== 'pendente') {
+            throw new InvalidArgumentException("A demanda desta prescrição já foi atendida.");
+        }
+        if ($frasco === null) {
+            throw new InvalidArgumentException("Frasco pasteurizado não encontrado.");
+        }
+        if ($frasco['status'] !== StatusFrascoPasteurizadoEnum::DISPONIVEL->value) {
+            throw new InvalidArgumentException("O frasco nº {$frasco['id']} não está disponível (precisa estar analisado e aprovado).");
+        }
+        if ($frasco['classificacao'] !== $prescricao['tipo_leite']) {
+            $precisa = TipoLeiteEnum::from($prescricao['tipo_leite'])->rotulo();
+            $frascoTipo = TipoLeiteEnum::from($frasco['classificacao'])->rotulo();
+            throw new InvalidArgumentException("Tipo de leite incompatível: o bebê precisa de leite {$precisa} e o frasco é de leite {$frascoTipo}.");
+        }
 
-        $distribuicao = new Distribuicao(
-            id : null,
-            demandaId : $dto->demandaId,
+        $db = Database::getConnection();
+        $db->beginTransaction();
+
+        try {
+            $id = $this->alocacaoRepository->create(new FrascoDistribuicao(
+                id: null,
+                prescricaoId: $dto->prescricaoId,
+                frascoPasteurizadoId: $dto->frascoPasteurizadoId
+            ));
+            $this->frascoRepository->updateStatus($dto->frascoPasteurizadoId, StatusFrascoPasteurizadoEnum::ALOCADO->value);
+
+            $db->commit();
+
+            return $id;
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
+    }
+
+    public function create(CreateDistribuicaoDTO $dto, int $funcionarioId): int
+    {
+        $demanda = $this->demandaRepository->findById($dto->demandaId);
+
+        if ($demanda === null) {
+            throw new InvalidArgumentException("Demanda não encontrada.");
+        }
+
+        $alocacoes = $this->alocacaoRepository->findProntosParaDistribuir($dto->demandaId);
+        if ($alocacoes === []) {
+            throw new InvalidArgumentException("Nenhum frasco foi separado para as prescrições desta demanda.");
+        }
+
+        $db = Database::getConnection();
+        $db->beginTransaction();
+
+        try {
+            $id = $this->repository->create(new Distribuicao(
+                id: null,
+                demandaId: $dto->demandaId,
+                funcionarioId: $funcionarioId,
+                data: $dto->data,
+                horario: $dto->horario,
+                setor: $dto->setor,
+                volumeCaixa: $dto->volumeCaixa,
+                temperatura: $dto->temperatura,
+                assinaturaEntrega: $dto->assinaturaEntrega,
+                assinaturaRecebimento: $dto->assinaturaRecebimento
+            ));
+
+            foreach ($alocacoes as $alocacao) {
+                $this->alocacaoRepository->registrarDistribuicao((int) $alocacao['id'], $id);
+                $this->frascoRepository->updateStatus(
+                    (int) $alocacao['frasco_pasteurizado_id'],
+                    StatusFrascoPasteurizadoEnum::DISTRIBUIDO->value
+                );
+            }
+            $this->demandaRepository->marcarAtendida($dto->demandaId);
+
+            $db->commit();
+
+            return $id;
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
+    }
+
+    public function registrarAdministracao(int $alocacaoId, CreateAdministracaoDTO $dto): bool
+    {
+        $alocacao = $this->alocacaoRepository->findById($alocacaoId);
+
+        if ($alocacao === null) {
+            throw new InvalidArgumentException("Registro do frasco não encontrado.");
+        }
+        if ($alocacao['distribuicao_id'] === null) {
+            throw new InvalidArgumentException("O frasco ainda não foi entregue ao hospital.");
+        }
+
+        return $this->alocacaoRepository->registrarAdministracao($alocacaoId, $dto->dataAdministracao);
+    }
+
+    public function registrarDevolucao(CreateDevolucaoDTO $dto): int
+    {
+        if ($this->hospitalRepository->findById($dto->hospitalId) === null) {
+            throw new InvalidArgumentException("Hospital não encontrado.");
+        }
+
+        return $this->devolucaoRepository->create(new DevolucaoFrascos(
+            id: null,
+            hospitalId: $dto->hospitalId,
             data: $dto->data,
-            horario: $dto->horario,
-            assinaturaEntrega: $dto->assinaturaEntrega,
-            assinaturaRecebimento: $dto->assinaturaRecebimento
-        );
-
-        return $this->repo->create($distribuicao);
+            tipoFrasco: $dto->tipoFrasco,
+            qtdEnviada: $dto->qtdEnviada,
+            qtdRecebida: $dto->qtdRecebida
+        ));
     }
 
-    public function findById (int $id) : ?array {
-        return $this->repo->findById($id);
+    public function findAll(): array
+    {
+        return $this->repository->findAll();
     }
 
-    public function findAll (?int $demandaId = null, ?string $data = null) {
-        if ($demandaId !== null) {
-            if (!$this->repo->demandaExists($demandaId))
-                throw new InvalidArgumentException("Demanda não encontrada!");
+    public function findById(int $id): ?array
+    {
+        $ficha = $this->repository->findById($id);
+
+        if ($ficha === null) {
+            return null;
         }
 
-        if ($data !== null) {
-            $d = \DateTime::createFromFormat('Y-m-d', $data);
+        $ficha['frascos'] = $this->alocacaoRepository->findAll($id);
 
-            if (!$d || $d->format('Y-m-d') !== $data)
-                throw new InvalidArgumentException("Data é Inválida! Use o formato `AAAA-mm-dd`!");
-        }
-
-        return $this->repo->findAll($demandaId, $data);
+        return $ficha;
     }
 
-    public function update(int $id, UpdateDistribuicaoDTO $dto) : bool {
-        $distribuicao = $this->repo->findById($id);
-
-        if ($distribuicao === null)
-            throw new InvalidArgumentException("Distribuição não encontrada!");
-
-        $data = $dto->toArray();
-
-        if ($data === []) return true;
-
-        if ($dto->data !== null || $dto->horario !== null) {
-            $dataFinal = $dto->data ?? $distribuicao['data'];
-            $horarioFinal = $dto->horario ?? substr($distribuicao['horario'], 0, 5);
-
-            $this->validateNotFuture($dataFinal, $horarioFinal);
-        }
-
-        return $this->repo->update($id, $data);
+    public function findAlocacoes(): array
+    {
+        return $this->alocacaoRepository->findAll();
     }
 
-    public function delete (int $id) : bool {
-        $distribuicao = $this->repo->findById($id);
-
-        if ($distribuicao === null)
-            throw new InvalidArgumentException("Distribuição não encontrada!");
-
-        return $this->repo->delete($id);
-    }
-
-    private function validateNotFuture(string $data, string $horario): void {
-        $tz = new \DateTimeZone('America/Sao_Paulo');
-        $horario = substr($horario, 0, 5);
-
-        $informada = \DateTimeImmutable::createFromFormat(
-            '!Y-m-d H:i',
-            "{$data} {$horario}",
-            $tz
-        );
-
-        if ($informada === false || $informada->format('Y-m-d H:i') !== "{$data} {$horario}") 
-            throw new InvalidArgumentException("Data e (ou) horário da distribuição são inválidos!");
-
-        $agora = new \DateTimeImmutable('now', $tz);
-
-        if ($informada > $agora)
-            throw new InvalidArgumentException("Data e (ou) horário da distribuição não podem ser futuros!");
+    public function findDevolucoes(): array
+    {
+        return $this->devolucaoRepository->findAll();
     }
 }
