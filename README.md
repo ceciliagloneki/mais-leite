@@ -1,68 +1,60 @@
-# +Leite — Banco de Leite Humano de Marília
+# +Leite — Frontend (Next.js)
 
-Painel administrativo do Banco de Leite Humano de Marília. Front-end em Next.js
-(App Router) para gestão de doadoras, coletas, processamento, distribuição e
-demais áreas operacionais.
+Painel do Banco de Leite Humano de Marília. Consome a API PHP da pasta `mais-leite-back`.
 
 ## Stack
 
-- [Next.js 14](https://nextjs.org/) (App Router)
-- [React 18](https://react.dev/) + TypeScript
-- [Tailwind CSS](https://tailwindcss.com/) com design tokens (HSL)
-- [TanStack Query](https://tanstack.com/query) para dados assíncronos
-- [lucide-react](https://lucide.dev/) para ícones
-- [Vitest](https://vitest.dev/) + Testing Library para testes
-
-## Pré-requisitos
-
-- Node.js 20+ (veja `.nvmrc`)
-- npm 10+
+- Next.js 14 (App Router) + React 18 + TypeScript
+- Tailwind CSS com design tokens (HSL) em `app/globals.css`
+- TanStack Query para os dados da API
+- Vitest para testes
 
 ## Como rodar
 
 ```bash
 npm install
-cp .env.example .env.local   # ajuste a URL da API se necessário
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:8090
 npm run dev                  # http://localhost:3000
 ```
 
-> Importante: `npm run dev` é um processo contínuo — rode no seu terminal, não
-> dentro de automações.
+| Comando             | Descrição                                   |
+| ------------------- | ------------------------------------------- |
+| `npm run dev`       | Servidor de desenvolvimento                 |
+| `npm run build`     | Build de produção (também confere os tipos) |
+| `npm run typecheck` | Confere os tipos (TypeScript)               |
+| `npm run test`      | Testes (Vitest)                             |
+| `npm run format`    | Formata o código (Prettier)                 |
 
-## Scripts
+## Estrutura
 
-| Comando          | Descrição                             |
-| ---------------- | ------------------------------------- |
-| `npm run dev`    | Servidor de desenvolvimento           |
-| `npm run build`  | Build de produção                     |
-| `npm run start`  | Sobe o build de produção              |
-| `npm run lint`   | Lint com ESLint (next lint)           |
-| `npm run test`   | Testes (Vitest, execução única)       |
-
-## Estrutura de pastas
-
-```
+```text
 app/
-  (dashboard)/            Grupo de rotas com o Sidebar fixo
-    layout.tsx            Layout compartilhado (Sidebar + área de conteúdo)
-    dashboard/            Página inicial do painel
-    doadoras/             Área de doadoras (referência de implementação)
-  layout.tsx              Layout raiz (html/body + Providers)
-  page.tsx                Redireciona "/" para "/dashboard"
-  providers.tsx           QueryClientProvider (TanStack Query)
-  globals.css             Design tokens (CSS variables) + base
-components/               Componentes de UI reutilizáveis
-  Sidebar.tsx             Navegação lateral fixa
-  PlaceholderPage.tsx     Base para áreas em construção
-hooks/                    Hooks de dados (ex.: use-doadoras)
-lib/                      Lógica pura e configuração
-  navigation.ts           Fonte única dos itens do menu lateral
-services/                 Acesso à API (fetch + mapeamento)
-types/                    Tipos de domínio compartilhados
+  login/                    tela de login
+  (dashboard)/              área logada (com o menu lateral)
+    dashboard/              painel
+    doadoras/               lista + ficha; doadoras/[id] = triagem e sorologias
+    coleta-domiciliar/      visitas e frascos crus
+    recepcao/               recepção e conformidade
+    processamento/          pasteurização, reenvase e análise
+    hospitais/              hospitais, pedidos e receitas
+    preparacao/             frasco destinado a cada RN
+    distribuicao/           ficha, baixa e devolução
+    rastreabilidade/        caminho completo de cada frasco, da coleta ao bebê
+    funcionarios/           equipe
+components/                 componentes comuns (DataTable, Card, Modal, FormModal, Field, Etiquetas, Logo...)
+hooks/                      um arquivo por área (useQuery / useSalvar) + use-frascos (rastreabilidade)
+services/                   chamadas à API (api.ts + um arquivo por área)
+types/                      tipos com os mesmos nomes de campos do banco
+lib/                        auth, navegação, formulários, formatação e regras (zonas, tipo de leite)
 ```
 
-## Convenções
+## Como uma tela funciona
 
-Veja [CONTRIBUTING.md](./CONTRIBUTING.md) para o fluxo de trabalho, padrões de
-código e como adicionar uma nova página ao painel.
-# Mais-Leite
+Página → hook (`hooks/`) → service (`services/`) → API.
+
+- **Listas:** `const doadoras = useDoadoras();` e `<DataTable itens={doadoras.data} colunas={[...]} />`.
+- **Formulários:** `<FormModal onSubmit={criar.mutateAsync} onFechar={...}>` com campos `<Campo name="...">`.
+  O `name` de cada campo é exatamente o nome que a API espera. Depois de salvar, todas as listas
+  da tela são recarregadas automaticamente (`hooks/use-salvar.ts`).
+
+Veja [CONTRIBUTING.md](./CONTRIBUTING.md) para os padrões do projeto.
