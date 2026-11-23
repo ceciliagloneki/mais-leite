@@ -1,25 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { getDoadoras, getDoadora } from "@/services/doadoras";
-import type { Doadora } from "@/types/doadora";
+import { buscarDoadora, criarDoadora, editarDoadora, listarDoadoras, listarZonas, registrarSorologia, registrarTriagem } from "@/services/doadoras";
+import { useSalvar } from "./use-salvar";
 
-export function useDoadoras() {
-  const query = useQuery<Doadora[]>({
-    queryKey: ["doadoras"],
-    queryFn: getDoadoras,
-  });
-  return {
-    data: query.data ?? [],
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    refetch: query.refetch,
-  };
-}
+export const useZonas = () => useQuery({ queryKey: ["zonas"], queryFn: listarZonas });
+export const useDoadoras = () => useQuery({ queryKey: ["doadoras"], queryFn: listarDoadoras });
+export const useDoadora = (id: number) => useQuery({ queryKey: ["doadoras", id], queryFn: () => buscarDoadora(id) });
 
-export function useDoadora(id: string) {
-  return useQuery<Doadora>({
-    queryKey: ["doadoras", id],
-    queryFn: () => getDoadora(id),
-    enabled: Boolean(id),
-  });
-}
+export const useCriarDoadora = () => useSalvar(criarDoadora);
+export const useEditarDoadora = (id: number) => useSalvar((dados: unknown) => editarDoadora(id, dados));
+export const useRegistrarTriagem = (id: number) => useSalvar((dados: unknown) => registrarTriagem(id, dados));
+export const useRegistrarSorologia = (id: number) => useSalvar((dados: unknown) => registrarSorologia(id, dados));
