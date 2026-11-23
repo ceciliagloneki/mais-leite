@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Controllers;
 
-use MaisLeiteBackend\Dtos\ColetasDomiciliares\ColetaDomiciliarListResponseDTO;
-use MaisLeiteBackend\Dtos\ColetasDomiciliares\ColetaDomiciliarResponseDTO;
+use MaisLeiteBackend\Dtos\ColetasDomiciliares\AgendarVisitaDTO;
 use MaisLeiteBackend\Dtos\ColetasDomiciliares\CreateColetaDomiciliarDTO;
-use MaisLeiteBackend\Dtos\ColetasDomiciliares\UpdateColetaDomiciliarDTO;
+use MaisLeiteBackend\Dtos\ColetasDomiciliares\CreateFrascoLeiteCruDTO;
+use MaisLeiteBackend\Dtos\ColetasDomiciliares\RealizarVisitaDTO;
+use MaisLeiteBackend\Middlewares\AuthMiddleware;
 use MaisLeiteBackend\Repositories\ColetaDomiciliarRepository;
+use MaisLeiteBackend\Repositories\DoadoraRepository;
+use MaisLeiteBackend\Repositories\FrascoLeiteCruRepository;
 use MaisLeiteBackend\Services\ColetaDomiciliarService;
 use MaisLeiteBackend\Utils\Response;
 use InvalidArgumentException;
@@ -19,78 +22,77 @@ final class ColetaDomiciliarController
 
     public function __construct()
     {
-        $this->service = new ColetaDomiciliarService(new ColetaDomiciliarRepository());
+        $this->service = new ColetaDomiciliarService(
+            new ColetaDomiciliarRepository(),
+            new FrascoLeiteCruRepository(),
+            new DoadoraRepository()
+        );
+    }
+
+    public function findAll(): void
+    {
+        Response::json($this->service->findAll());
     }
 
     public function create(): void
     {
         try {
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
-            $dto = new CreateColetaDomiciliarDTO($data);
-            $id = $this->service->create($dto);
+            $id = $this->service->create(new CreateColetaDomiciliarDTO($data), AuthMiddleware::$funcionarioId);
 
-            $coleta = $this->service->findById($id);
-            Response::json(ColetaDomiciliarResponseDTO::fromArray($coleta), 201);
+            Response::json(['id' => $id], 201);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }
     }
 
-    public function findAll(): void
+    public function agendar(): void
     {
         try {
-            $status = $_GET['status'] ?? null;
-            $coletas = $this->service->findAll($status);
-
-            Response::json(ColetaDomiciliarListResponseDTO::fromArray($coletas));
-        } catch (InvalidArgumentException $e) {
-            Response::error($e->getMessage(), 400);
-        }
-    }
-
-    public function findById(int $id): void
-    {
-        $coleta = $this->service->findById($id);
-
-        if ($coleta === null) {
-            Response::error("Coleta não encontrada.", 404);
-            return;
-        }
-
-        Response::json(ColetaDomiciliarResponseDTO::fromArray($coleta));
-    }
-
-    public function update(int $id): void
-    {
-        try {
-            $coleta = $this->service->findById($id);
-            if ($coleta === null) {
-                Response::error("Coleta não encontrada.", 404);
-                return;
-            }
-
             $data = json_decode(file_get_contents('php://input'), true) ?? [];
-            $dto = new UpdateColetaDomiciliarDTO($data);
-            $this->service->update($id, $dto);
+            $id = $this->service->agendar(new AgendarVisitaDTO($data), AuthMiddleware::$funcionarioId);
 
-            $coleta = $this->service->findById($id);
-            Response::json(ColetaDomiciliarResponseDTO::fromArray($coleta));
+            Response::json(['id' => $id], 201);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }
     }
 
-    public function delete(int $id): void
+    public function realizar(int $id): void
     {
         try {
-            $coleta = $this->service->findById($id);
-            if ($coleta === null) {
-                Response::error("Coleta não encontrada.", 404);
-                return;
-            }
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $this->service->realizar($id, new RealizarVisitaDTO($data), AuthMiddleware::$funcionarioId);
 
-            $this->service->delete($id);
-            Response::json(['message' => 'Coleta cancelada com sucesso.']);
+            Response::json(['id' => $id]);
+        } catch (InvalidArgumentException $e) {
+            Response::error($e->getMessage(), 400);
+        }
+    }
+
+    public function cancelar(int $id): void
+    {
+        try {
+            $this->service->cancelar($id);
+
+            Response::json(['id' => $id]);
+        } catch (InvalidArgumentException $e) {
+            Response::error($e->getMessage(), 400);
+        }
+    }
+
+    public function frascos(): void
+    {
+        Response::json($this->service->findFrascos($_GET['status'] ?? null));
+    }
+
+    public function registrarFrasco(int $id): void
+    {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $frascoId = $this->service->registrarFrasco($id, new CreateFrascoLeiteCruDTO($data));
+
+            Response::json(['id' => $frascoId], 201);
         } catch (InvalidArgumentException $e) {
             Response::error($e->getMessage(), 400);
         }
