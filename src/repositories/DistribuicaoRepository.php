@@ -12,110 +12,59 @@ final class DistribuicaoRepository
 {
     private PDO $db;
 
-    public function __construct () {
+    public function __construct()
+    {
         $this->db = Database::getConnection();
     }
 
-    public function create (Distribuicao $distribuicao) : int {
-        $sql = "INSERT INTO distribuicao (
-                demanda_id,
-                data,
-                horario,
-                assinatura_entrega,
-                assinatura_recebimento)
-                VALUES (
-                :demanda_id,
-                :data,
-                :horario,
-                :assinatura_entrega,
-                :assinatura_recebimento)";
+    public function create(Distribuicao $distribuicao): int
+    {
+        $sql = "INSERT INTO distribuicao (demanda_id, funcionario_id, data, horario, setor, volume_caixa, temperatura,
+                    assinatura_entrega, assinatura_recebimento)
+                VALUES (:demanda_id, :funcionario_id, :data, :horario, :setor, :volume_caixa, :temperatura,
+                    :assinatura_entrega, :assinatura_recebimento)";
 
-        $statement = $this->db->prepare($sql);
-        $statement->execute([
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
             'demanda_id' => $distribuicao->demandaId,
-            'data'       => $distribuicao->data,
-            'horario'    => $distribuicao->horario,
-            'assinatura_entrega'     => $distribuicao->assinaturaEntrega,
-            'assinatura_recebimento' => $distribuicao->assinaturaRecebimento
+            'funcionario_id' => $distribuicao->funcionarioId,
+            'data' => $distribuicao->data,
+            'horario' => $distribuicao->horario,
+            'setor' => $distribuicao->setor,
+            'volume_caixa' => $distribuicao->volumeCaixa,
+            'temperatura' => $distribuicao->temperatura,
+            'assinatura_entrega' => $distribuicao->assinaturaEntrega,
+            'assinatura_recebimento' => $distribuicao->assinaturaRecebimento,
         ]);
 
         return (int) $this->db->lastInsertId();
     }
 
-    public function findById (int $id) : ?array {
-        $sql = "SELECT id, demanda_id, data, horario, assinatura_entrega, assinatura_recebimento
-                FROM distribuicao
-                WHERE id = :id
-                AND deleted_at IS NULL";
+    public function findById(int $id): ?array
+    {
+        $sql = "SELECT di.*, h.nome AS hospital_nome
+                FROM distribuicao di
+                INNER JOIN demanda d ON d.id = di.demanda_id
+                INNER JOIN hospital h ON h.id = d.hospital_id
+                WHERE di.id = :id";
 
-        $statement = $this->db->prepare($sql);
-        $statement->execute(['id' => $id]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $id]);
 
-        $res = $statement->fetch();
-        return $res ?: null;
+        $result = $stmt->fetch();
+
+        return $result ?: null;
     }
 
-    public function findAll (?int $demanda_id = null, ?string $data = null) :array {
-        $sql = "SELECT id, demanda_id, data, horario, assinatura_entrega, assinatura_recebimento
-                FROM distribuicao
-                WHERE deleted_at IS NULL";
+    public function findAll(): array
+    {
+        $sql = "SELECT di.*, h.nome AS hospital_nome,
+                       (SELECT COUNT(*) FROM frasco_distribuicao fd WHERE fd.distribuicao_id = di.id) AS quant_frascos
+                FROM distribuicao di
+                INNER JOIN demanda d ON d.id = di.demanda_id
+                INNER JOIN hospital h ON h.id = d.hospital_id
+                ORDER BY di.data DESC, di.id DESC";
 
-        $params = [];
-
-        if ($demanda_id !== null) {
-            $sql .= " AND demanda_id = :demanda_id";
-            $params['demanda_id'] = $demanda_id;
-        }
-
-        if ($data !== null) {
-            $sql .= " AND data = :data";
-            $params['data'] = $data;
-        }
-
-        $sql .= " ORDER BY id ASC";
-
-        $statement = $this->db->prepare($sql);
-        $statement->execute($params);
-
-        return $statement->fetchAll();
-    }
-
-    public function update (int $id, array $data) : bool {
-        $fields = [];
-        $params = ['id' => $id];
-
-        foreach ($data as $key => $value) {
-            $fields[] = "{$key} = :{$key}";
-            $params[$key] = $value;
-        }
-
-        $sql = "UPDATE distribuicao SET " .
-                implode(', ', $fields)    .
-               " WHERE id = :id";
-
-        $statement = $this->db->prepare($sql);
-        return $statement->execute($params);
-    }
-
-    public function delete (int $id) : bool {
-        $sql = "UPDATE distribuicao
-                SET deleted_at = CURRENT_TIMESTAMP
-                WHERE id = :id
-                AND deleted_at IS NULL";
-
-        $statement = $this->db->prepare($sql);
-        return $statement->execute(['id' => $id]);
-    }
-
-    public function demandaExists (int $id) : bool {
-        $sql = "SELECT id from demanda
-                WHERE id = :id
-                AND status_solicitacao
-                IN ('pendente', 'aprovada')";
-
-        $statement = $this->db->prepare($sql);
-        $statement->execute(['id' => $id]);
-
-        return $statement->fetch() !== false;
+        return $this->db->query($sql)->fetchAll();
     }
 }
