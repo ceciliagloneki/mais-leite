@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MaisLeiteBackend\Enums;
 
-enum StatusColetaEnum: string
+enum StatusVisitaEnum: string
 {
     case AGENDADA = 'agendada';
     case REALIZADA = 'realizada';
