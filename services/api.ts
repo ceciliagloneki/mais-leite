@@ -1,27 +1,34 @@
-/**
- * Shared API client for the +Leite front-end.
- *
- * Resolves the base URL from `NEXT_PUBLIC_API_URL`, performs the fetch,
- * throws on non-2xx responses (so TanStack Query can surface the error
- * state), and returns the parsed JSON body typed as `T`.
- */
-export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-  const url = `${baseUrl}${path}`;
+import { clearAuthentication, getToken } from "@/lib/auth";
 
-  const response = await fetch(url, {
+export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8090";
+  const token = getToken();
+
+  const response = await fetch(`${baseUrl}${path}`, {
+    ...init,
     headers: {
       "Content-Type": "application/json",
-      ...init?.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    ...init,
   });
 
+  const body = await response.json().catch(() => ({}));
+
   if (!response.ok) {
-    throw new Error(
-      `API request to ${path} failed with status ${response.status}`,
-    );
+    if (response.status === 401 && token) {
+      clearAuthentication();
+      window.location.assign("/login");
+    }
+    throw new Error(body.error ?? `Erro ao acessar ${path}.`);
   }
 
-  return (await response.json()) as T;
+  return body as T;
+}
+
+export function post<T>(path: string, dados: unknown): Promise<T> {
+  return api<T>(path, { method: "POST", body: JSON.stringify(dados) });
+}
+
+export function put<T>(path: string, dados: unknown): Promise<T> {
+  return api<T>(path, { method: "PUT", body: JSON.stringify(dados) });
 }
