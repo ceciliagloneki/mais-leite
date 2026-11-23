@@ -2,40 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 100%;
+}
+
 :root {
-  /* Superfície principal creme (fundo do app) */
-  --background: 28 60% 97%;
-  --foreground: 222 30% 20%;
+  --background: 36 33% 95%;
+  --foreground: 205 35% 16%;
 
-  /* Superfícies de conteúdo (cards, tabela) */
   --surface: 0 0% 100%;
-  --surface-foreground: 222 30% 20%;
+  --surface-foreground: 205 35% 16%;
 
-  --border: 28 25% 88%;
-  --input: 28 25% 88%;
-  --ring: 222 47% 25%;
+  --border: 33 20% 86%;
+  --input: 33 14% 72%;
+  --ring: 184 80% 30%;
 
-  /* Acento primário coral/salmão (CTA, destaques) */
-  --primary: 10 72% 60%;
+  --primary: 184 78% 26%;
   --primary-foreground: 0 0% 100%;
 
-  --muted: 28 30% 94%;
-  --muted-foreground: 222 12% 45%;
+  --brand: 6 85% 66%;
+  --brand-foreground: 0 0% 100%;
 
-  --success: 142 55% 42%;
-  --warning: 32 85% 55%;
-  --danger: 0 72% 58%;
+  --muted: 36 30% 92%;
+  --muted-foreground: 205 14% 36%;
 
-  /* Sidebar escuro azulado (navegação lateral fixa) */
-  --sidebar: 222 32% 18%;
-  --sidebar-foreground: 210 20% 92%;
-  --sidebar-muted: 215 15% 65%;
-  --sidebar-accent: 10 72% 60%;
+  --success: 160 70% 27%;
+  --warning: 30 92% 36%;
+  --danger: 0 70% 45%;
+  --info: 205 70% 36%;
+
+  --sidebar: 205 33% 21%;
+  --sidebar-foreground: 200 25% 94%;
+  --sidebar-muted: 195 22% 72%;
+  --sidebar-accent: 184 78% 30%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 222 25% 26%;
+  --sidebar-border: 205 25% 28%;
 }
 
 body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+@media print {
+  .app-sidebar,
+  .app-topbar,
+  nav,
+  form {
+    display: none !important;
+  }
+  .app-content {
+    padding-left: 0 !important;
+  }
+  body {
+    background: white;
+    font-size: 11px;
+  }
+  tr {
+    break-inside: avoid;
+  }
+
+  body:has(.print-modal) > :not(.print-modal) {
+    display: none !important;
+  }
+  .print-modal {
+    position: static !important;
+    display: block !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .print-modal .modal-fundo,
+  .print-modal .modal-cabecalho,
+  .print-modal .modal-rodape {
+    display: none !important;
+  }
+  .print-modal .modal-caixa,
+  .print-modal .modal-corpo {
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  .etiqueta,
+  .documento-impressao {
+    margin: 0 !important;
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
