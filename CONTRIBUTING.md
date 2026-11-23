@@ -12,7 +12,7 @@ mexam em páginas diferentes sem conflito.
 3. Faça commits pequenos e descritivos (português):
    - `feat: lista de coletas domiciliares`
    - `fix: corrige contagem de doadoras ativas`
-4. Rode `npm run lint` e `npm run test` antes de abrir o PR.
+4. Rode `npm run format`, `npm run typecheck` e `npm run test` antes de abrir o PR.
 5. Abra um Pull Request para a `main` e peça revisão.
 
 Não faça push direto na `main`.
@@ -21,14 +21,15 @@ Não faça push direto na `main`.
 
 - TypeScript em todo lugar. Evite `any`.
 - Componentes de UI em `components/`, um arquivo por componente, export nomeado
-  + `default`.
+  - `default`.
 - Lógica pura e sem React em `lib/`. Acesso à API em `services/`. Tipos de
   domínio em `types/`.
 - Dados assíncronos sempre via hook em `hooks/` usando TanStack Query — a página
   nunca chama `fetch()` nem importa o service diretamente.
 - Estilização só com classes Tailwind usando os tokens do tema (`bg-surface`,
   `text-foreground`, `text-muted-foreground`, `border-border`, `bg-primary`...).
-  Não use cores hex fixas.
+  Não use cores hex fixas (exceções: o logo e os documentos impressos, que usam a paleta da marca em `components/Logo.tsx`).
+- Sem comentários no código: nomes claros de variáveis, funções e componentes explicam o que o código faz.
 - Ícones via `lucide-react`.
 
 ## Design tokens
@@ -38,10 +39,35 @@ As cores vivem como CSS variables em `app/globals.css` e são expostas no
 
 - `background` / `foreground` — fundo creme do app e texto
 - `surface` — superfície branca de cards e tabelas
-- `primary` — acento coral (CTAs)
+- `primary` — verde-azulado (botões e item ativo)
+- `brand` — coral da marca (logo)
 - `muted` / `muted-foreground` — áreas e textos secundários
-- `success` / `warning` / `danger` — estados
+- `success` / `warning` / `danger` / `info` — estados (verde = ok, amarelo = aguardando, vermelho = problema)
 - `sidebar*` — cores da navegação lateral
+
+## Padrão de tela (UX)
+
+O sistema é usado por pessoas de 40–50 anos: tudo precisa ser grande, claro e
+igual em todas as telas.
+
+1. `PageHeader` com o título e **um** botão principal (`acao`) no formato "+ Novo …" / "+ Nova …", com o ícone `Plus`.
+2. Listagem: `Card tabela` com a busca e os filtros no `filtros` do card, e `DataTable` dentro. Use as células comuns
+   (`Codigo`, `Numero`, `TextoDuplo`, `TextoApoio`); linhas clicáveis usam `aoClicar` (a seta aparece sozinha).
+3. Formulários curtos abrem em `FormModal`; confirmações em `ConfirmarModal`; impressões em `ImpressaoModal`.
+   Tamanhos de modal: `sm` confirmação, `md` formulário, `lg` formulário com lista ou detalhe.
+   `FormCard` fica só para formulários de página inteira (nova doadora, triagem).
+4. Dados que o sistema já conhece não são digitados de novo: calcule (ex.: tipo de leite pela data do parto) e mostre com `ValorFixo`.
+5. Telas com várias etapas usam `Abas`. Ações de uma linha ficam na própria linha, com o botão `pequeno`.
+6. Datas do dia já vêm preenchidas (`hoje()`, `agora()` em `lib/format.ts`). Regras de zona e tipo de leite ficam em `lib/regras.ts`.
+7. Perguntas que mudam o resultado (conforme/não conforme) usam `SimNao`, não checkbox.
+8. Botões sempre com texto (`Botao`), nunca só ícone. `Aviso` explica a regra ou o próximo passo.
+
+Componentes comuns: `Botao` (Button.tsx), `Card`, `DataTable` + células (DataTable.tsx), `Modal`/`ImpressaoModal` (Modal.tsx),
+`FormModal`/`ConfirmarModal` (FormModal.tsx), `FormCard`, `Campo`/`Selecao`/`ValorFixo`/`Marcar`/`SimNao`/`ListaMarcar`/`Grupo`
+(Field.tsx), `Abas` (Tabs.tsx), `Busca` (SearchInput.tsx), `Filtros`/`FiltroSelecao`/`FiltrosEtapas` (Filters.tsx), `Indicador`
+(StatCard.tsx), `Aviso` (Alert.tsx), `GradeBlocos`/`BlocoInfo`/`ItemInfo`/`SecaoInfo`/`PainelInfo`/`LinhaInfo`/`Dados`/`Dado`/
+`FaixaNumeros` (InfoGrid.tsx), `PassoLinhaDoTempo`/`ProgressoEtapas` (LinhaDoTempo.tsx), `EtiquetaLeiteCru`/
+`EtiquetaLeitePasteurizado`/`FichaDistribuicaoImpressa` (Etiquetas.tsx), `Logo`, `StatusBadge`, `useNotificacao` (Notificacao.tsx).
 
 ## Organização de rotas (por que o grupo `(dashboard)`)
 
@@ -57,7 +83,7 @@ app/
     doadoras/           -> /doadoras
     processamento/      -> /processamento
   layout.tsx            Layout raiz (html/body + Providers)
-  page.tsx              "/" redireciona para "/dashboard"
+  page.tsx              "/" redireciona para "/dashboard" (ou "/login")
 ```
 
 Benefícios:
@@ -88,21 +114,12 @@ GitHub, Linear e Vercel.
 Todas as páginas do painel ficam dentro de `app/(dashboard)/` e herdam o
 Sidebar fixo automaticamente.
 
-1. Crie a pasta e a página, ex.: `app/(dashboard)/processamento/page.tsx`.
-2. Comece pelo placeholder padronizado:
-
-   ```tsx
-   import { PlaceholderPage } from "@/components/PlaceholderPage";
-
-   export default function ProcessamentoPage() {
-     return <PlaceholderPage title="Processamento" />;
-   }
-   ```
-
-3. Garanta que o item existe no menu em `lib/navigation.ts` (o `href` precisa
-   bater com a rota da pasta). O Sidebar marca o item ativo sozinho.
-4. Siga a área de **Doadoras** (`app/(dashboard)/doadoras/`) como referência de
-   página completa: hook de dados, estados de loading/erro/vazio e componentes.
+1. Crie os tipos em `types/`, as chamadas em `services/` e os hooks em `hooks/`
+   (copie uma área existente, ex.: `hospitais`).
+2. Crie a página, ex.: `app/(dashboard)/hospitais/page.tsx`, seguindo o padrão
+   das telas (veja "Padrão de tela" abaixo).
+3. Adicione o item no menu em `lib/navigation.ts` (o `href` precisa bater com a
+   rota da pasta). O Sidebar marca o item ativo sozinho.
 
 ## Testes
 
