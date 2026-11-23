@@ -1,6 +1,15 @@
-import { redirect } from "next/navigation";
+"use client";
 
-// Raiz da aplicação redireciona para o painel.
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { hasValidAuthentication } from "@/lib/auth";
+
 export default function Home() {
-  redirect("/dashboard");
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(hasValidAuthentication() ? "/dashboard" : "/login");
+  }, [router]);
+
+  return null;
 }

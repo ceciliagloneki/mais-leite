@@ -1,17 +1,46 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Menu } from "lucide-react";
 
-import { Sidebar } from "@/components/Sidebar";
+import { Marca, Sidebar } from "@/components/Sidebar";
+import { hasValidAuthentication } from "@/lib/auth";
 
-// Layout compartilhado por todas as páginas do grupo (dashboard).
-// Mantém o Sidebar fixo à esquerda e reserva o espaço (pl-64) para o conteúdo.
-// Qualquer página criada dentro de app/(dashboard)/ herda este layout
-// automaticamente, garantindo visual padronizado entre as áreas do sistema.
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+  const [menuAberto, setMenuAberto] = useState(false);
+
+  useEffect(() => {
+    if (!hasValidAuthentication()) {
+      router.replace("/login");
+      return;
+    }
+    setAuthorized(true);
+  }, [router]);
+
+  if (!authorized) return null;
+
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
-      <div className="pl-64">
-        <div className="min-h-screen">{children}</div>
+      <Sidebar aberto={menuAberto} onFechar={() => setMenuAberto(false)} />
+
+      <div className="app-topbar sticky top-0 z-20 flex items-center justify-between bg-sidebar px-4 py-3 lg:hidden">
+        <Marca />
+        <button
+          type="button"
+          onClick={() => setMenuAberto(true)}
+          className="flex h-11 items-center gap-2 rounded-lg border border-sidebar-border px-4 text-base font-medium text-sidebar-foreground"
+        >
+          <Menu className="h-5 w-5" aria-hidden="true" />
+          Menu
+        </button>
+      </div>
+
+      <div className="app-content lg:pl-[18rem]">
+        <div className="min-h-screen w-full">{children}</div>
       </div>
     </div>
   );
