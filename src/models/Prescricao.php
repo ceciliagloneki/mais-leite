@@ -3,16 +3,14 @@
 declare(strict_types=1);
 
 namespace MaisLeiteBackend\Models;
-use MaisLeiteBackend\Enums\TipoLeiteEnum;
 
-class Prescricao
+final class Prescricao
 {
     public function __construct(
-        public readonly ?int    $id,
-        public readonly int    $demanda_id,
-        public readonly float  $volume_prescrito,
-        public readonly string $nome_do_rn,
-        public readonly TipoLeiteEnum $tipo_leite,
-        public readonly ?string $deleted_at = null
+        public readonly ?int $id,
+        public readonly int $demandaId,
+        public readonly string $nomeDoRn,
+        public readonly float $volumePrescrito,
+        public readonly string $tipoLeite
     ) {}
 }
