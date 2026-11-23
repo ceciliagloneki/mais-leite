@@ -1,6 +1,6 @@
 # +Leite — Frontend (Next.js)
 
-Painel do Banco de Leite Humano de Marília. Consome a API PHP da pasta `mais-leite-back`.
+Painel do Banco de Leite Humano de Marília. Consome a API PHP da pasta `mais-leite-backend`.
 
 ## Stack
 
