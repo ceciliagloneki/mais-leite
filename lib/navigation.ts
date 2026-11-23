@@ -1,42 +1,38 @@
-import {
-  LayoutDashboard,
-  Users,
-  Home,
-  ClipboardCheck,
-  FlaskConical,
-  QrCode,
-  Hospital,
-  PackageCheck,
-  Truck,
-  Boxes,
-  BarChart3,
-  type LucideIcon,
-} from "lucide-react";
+import { LayoutDashboard, Users, Home, ClipboardCheck, FlaskConical, Hospital, PackageCheck, Truck, Search, UserCog, type LucideIcon } from "lucide-react";
 
-export interface NavItem {
-  /** Rótulo exibido no sidebar. */
+interface NavItem {
   label: string;
-  /** Rota de destino (Next.js App Router). */
   href: string;
-  /** Ícone lucide-react associado ao item. */
   icon: LucideIcon;
-  /** Contador opcional exibido como badge (ex.: pendências). */
-  badge?: number;
+  etapa?: number;
 }
 
-// Fonte única de verdade para a navegação lateral. Cada colega responsável por
-// uma página adiciona/edita o item correspondente aqui — o Sidebar renderiza a
-// partir desta lista e marca o item ativo pela rota atual.
-export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Doadoras", href: "/doadoras", icon: Users },
-  { label: "Coleta Domiciliar", href: "/coleta-domiciliar", icon: Home, badge: 3 },
-  { label: "Recepção e Inspeção", href: "/recepcao-inspecao", icon: ClipboardCheck },
-  { label: "Processamento", href: "/processamento", icon: FlaskConical, badge: 2 },
-  { label: "Rastreabilidade", href: "/rastreabilidade", icon: QrCode },
-  { label: "Hospitais e Demandas", href: "/hospitais-demandas", icon: Hospital, badge: 1 },
-  { label: "Prep. para Liberação", href: "/preparo-liberacao", icon: PackageCheck },
-  { label: "Distribuição", href: "/distribuicao", icon: Truck },
-  { label: "Estoque / Frota", href: "/estoque-frota", icon: Boxes },
-  { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
+interface NavGroup {
+  titulo?: string;
+  itens: NavItem[];
+}
+
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    itens: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard }],
+  },
+  {
+    titulo: "Caminho do leite",
+    itens: [
+      { label: "Doadoras", href: "/doadoras", icon: Users, etapa: 1 },
+      { label: "Coleta domiciliar", href: "/coleta-domiciliar", icon: Home, etapa: 2 },
+      { label: "Recepção e inspeção", href: "/recepcao", icon: ClipboardCheck, etapa: 3 },
+      { label: "Processamento", href: "/processamento", icon: FlaskConical, etapa: 4 },
+      { label: "Hospitais e pedidos", href: "/hospitais", icon: Hospital, etapa: 5 },
+      { label: "Preparação", href: "/preparacao", icon: PackageCheck, etapa: 6 },
+      { label: "Distribuição", href: "/distribuicao", icon: Truck, etapa: 7 },
+    ],
+  },
+  {
+    titulo: "Gestão e consultas",
+    itens: [
+      { label: "Rastreabilidade", href: "/rastreabilidade", icon: Search },
+      { label: "Equipe", href: "/funcionarios", icon: UserCog },
+    ],
+  },
 ];

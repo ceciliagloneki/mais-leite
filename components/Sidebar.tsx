@@ -1,86 +1,99 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Droplet, LogOut } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut, X } from "lucide-react";
 
-import { NAV_ITEMS } from "@/lib/navigation";
+import { Logo } from "@/components/Logo";
+import { NAV_GROUPS } from "@/lib/navigation";
+import { clearAuthentication, getAuthenticatedEmployee } from "@/lib/auth";
 
-// Sidebar fixo da aplicação. Renderiza a navegação a partir de NAV_ITEMS
-// (fonte única em lib/navigation.ts) e destaca o item ativo pela rota atual.
-// Largura fixa de 16rem (w-64); o layout reserva esse espaço no conteúdo.
-export function Sidebar() {
+interface SidebarProps {
+  aberto: boolean;
+  onFechar: () => void;
+}
+
+export function Marca({ claro = true }: { claro?: boolean }) {
+  return <Logo claro={claro} tamanho="sm" slogan={false} />;
+}
+
+export function Sidebar({ aberto, onFechar }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const funcionario = getAuthenticatedEmployee();
+
+  function logout() {
+    clearAuthentication();
+    router.replace("/login");
+  }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-sidebar text-sidebar-foreground">
-      {/* Marca / identificação da unidade */}
-      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sidebar-accent text-sidebar-accent-foreground">
-          <Droplet className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <div className="flex flex-col leading-tight">
-          <span className="text-lg font-semibold">+Leite</span>
-          <span className="text-xs text-sidebar-muted">
-            Banco de Leite Humano de Marília
-          </span>
+    <>
+      {aberto ? <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={onFechar} aria-hidden="true" /> : null}
+
+      <aside
+        className={`app-sidebar fixed inset-y-0 left-0 z-40 flex w-[18rem] flex-col bg-sidebar text-sidebar-foreground transition-transform lg:translate-x-0 ${
+          aberto ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-start justify-between border-b border-sidebar-border px-5 py-4">
+          <div>
+            <Marca />
+            <p className="mt-1 text-xs leading-snug text-sidebar-muted">Banco de Leite Humano de Marília</p>
+          </div>
+          <button type="button" onClick={onFechar} className="rounded-lg p-2 hover:bg-white/10 lg:hidden" aria-label="Fechar menu">
+            <X className="h-6 w-6" aria-hidden="true" />
+          </button>
         </div>
-      </div>
 
-      {/* Navegação principal */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <ul className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+        <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label="Menu principal">
+          {NAV_GROUPS.map((grupo, indice) => (
+            <div key={grupo.titulo ?? indice} className="mb-3">
+              {grupo.titulo ? <p className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-sidebar-muted">{grupo.titulo}</p> : null}
+              <ul className="flex flex-col gap-0.5">
+                {grupo.itens.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/80 hover:bg-white/5 hover:text-sidebar-foreground"
-                  }`}
-                >
-                  <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-                  <span className="flex-1 truncate">{item.label}</span>
-                  {item.badge ? (
-                    <span
-                      className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold ${
-                        isActive
-                          ? "bg-white/20 text-sidebar-accent-foreground"
-                          : "bg-sidebar-accent text-sidebar-accent-foreground"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={onFechar}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`flex min-h-10 items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                            : "text-sidebar-foreground/85 hover:bg-white/10 hover:text-sidebar-foreground"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                        <span className="flex-1">{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
 
-      {/* Rodapé: responsável técnico + sair */}
-      <div className="border-t border-sidebar-border px-5 py-4">
-        <div className="mb-3 flex flex-col leading-tight">
-          <span className="text-sm font-medium">Farm. Carlos Neto</span>
-          <span className="text-xs text-sidebar-muted">Responsável Técnico</span>
+        <div className="border-t border-sidebar-border px-4 py-3">
+          <div className="mb-2 px-1 leading-tight">
+            <p className="text-sm font-medium">{funcionario?.nome ?? "Funcionário"}</p>
+            <p className="text-xs text-sidebar-muted">{funcionario?.cargo ?? "Acesso ao sistema"}</p>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex min-h-10 w-full items-center gap-3 rounded-lg border border-sidebar-border px-3 text-sm font-medium text-sidebar-foreground/90 transition-colors hover:bg-white/10"
+          >
+            <LogOut className="h-5 w-5" aria-hidden="true" />
+            Sair do sistema
+          </button>
         </div>
-        <button
-          type="button"
-          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-white/5 hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-accent"
-        >
-          <LogOut className="h-[18px] w-[18px]" aria-hidden="true" />
-          Sair
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
