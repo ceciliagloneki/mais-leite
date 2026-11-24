@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Cria uma EC2 na AWS com o +Leite rodando (MySQL + API + painel via Docker Compose).
 # Pré-requisito: AWS CLI configurada (aws configure). Uso: ./deploy/aws-ec2.sh
+# Com dados de demonstração para uma data: SEED_DEMO=2026-11-26 ./deploy/aws-ec2.sh
 set -euo pipefail
 
 REGION="${AWS_REGION:-us-east-2}"  # sua conta só libera EC2 em Ohio
 NAME="mais-leite"
+SEED_DEMO="${SEED_DEMO:-}"
 TYPE="${INSTANCE_TYPE:-t3.small}"   # Next.js precisa de ~2 GB de RAM para o build
 REPO="https://github.com/ceciliagloneki/mais-leite.git"
 
@@ -40,6 +42,10 @@ APP_SECRET=$APP_SECRET
 DB_PASSWORD=$DB_PASSWORD
 ENV
 docker compose up -d --build
+if [ -n "$SEED_DEMO" ]; then
+  until curl -s -o /dev/null http://localhost:8090/; do sleep 3; done
+  docker compose exec -T api php scripts/seed_demo.php $SEED_DEMO
+fi
 SCRIPT
 )
 
