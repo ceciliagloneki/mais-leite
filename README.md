@@ -102,75 +102,41 @@ docker compose exec api php scripts/seed_demo.php 2026-11-26
 
 ## Deploy
 
-O sistema está publicado na AWS:
+O sistema está no ar na AWS (serviço de nuvem da Amazon):
 
 - **Painel:** http://52.15.60.95
 - **API:** http://52.15.60.95:8090
 
-O banco foi carregado com os dados de demonstração para 26/11/2026, dia da apresentação. O login é o mesmo do seed (veja [Acesso](#4-acesso)).
+Ele já tem os dados de demonstração para a apresentação de 26/11/2026. O login é o mesmo de [Acesso](#4-acesso).
 
-### Como o deploy na AWS foi feito
+### Como funciona
 
-Tudo roda numa única máquina virtual (EC2) com Docker Compose. É o jeito mais simples de publicar o projeto inteiro e cabe no plano gratuito da AWS.
+Alugamos um computador na AWS (chamado de **EC2**) e rodamos o sistema inteiro nele, com o **Docker**. O Docker separa o sistema em 3 partes, e cada uma roda isolada:
 
-```text
-AWS · us-east-2 (Ohio) · EC2 t3.small · Ubuntu 24.04
-├── web  (porta 80)    painel Next.js em modo produção
-├── api  (porta 8090)  API PHP 8.3; cria as tabelas e o admin ao iniciar
-└── db   (interna)     MySQL 8, com os dados num volume persistente
-```
-
-Arquivos usados:
-
-| Arquivo | Para que serve |
-| --- | --- |
-| [`docker-compose.yml`](docker-compose.yml) | Define os 3 containers (`db`, `api`, `web`) e liga um ao outro |
-| [`mais-leite-backend/Dockerfile`](mais-leite-backend/Dockerfile) | Imagem da API |
-| [`mais-leite-frontend/Dockerfile`](mais-leite-frontend/Dockerfile) | Imagem do painel; a URL da API entra no build |
-| [`deploy/aws-ec2.sh`](deploy/aws-ec2.sh) | Script que cria a máquina na AWS e sobe tudo |
-
-O que o script `deploy/aws-ec2.sh` faz, em ordem:
-
-1. Busca a imagem mais recente do Ubuntu 24.04.
-2. Cria o grupo de segurança `mais-leite`, que libera só as portas 80 (painel) e 8090 (API). O banco não fica exposto na internet.
-3. Gera uma `APP_SECRET` e uma senha do banco aleatórias.
-4. Cria a máquina EC2 com um script de inicialização que:
-   - cria 2 GB de swap (o build do Next.js precisa de memória);
-   - instala o Docker;
-   - clona este repositório do GitHub;
-   - descobre o IP público da máquina e grava o `.env` com o IP e as senhas;
-   - roda `docker compose up -d --build`;
-   - se a variável `SEED_DEMO` foi informada, carrega os dados de demonstração dessa data.
-5. Mostra o endereço do painel e o comando para apagar a máquina.
-
-A instalação leva cerca de 5 minutos depois que a máquina liga.
-
-### Como publicar de novo
-
-Pré-requisitos: [AWS CLI](https://docs.aws.amazon.com/cli/) instalada e uma chave de acesso configurada com `aws configure`. O usuário da chave precisa das permissões `AmazonEC2FullAccess` e `AmazonSSMReadOnlyAccess`.
-
-```bash
-./deploy/aws-ec2.sh                          # sistema vazio, só com o admin
-SEED_DEMO=2026-11-26 ./deploy/aws-ec2.sh     # já com os dados de demonstração
-```
-
-O script baixa o código do GitHub, então as mudanças precisam estar na `main` antes de rodar.
-
-Variáveis opcionais:
-
-| Variável | Padrão | Descrição |
+| Parte | O que é | Porta |
 | --- | --- | --- |
-| `AWS_REGION` | `us-east-2` | Região da AWS. Na conta do grupo, só Ohio libera a criação de máquinas. |
-| `INSTANCE_TYPE` | `t3.small` | Tipo da máquina. Com menos de 2 GB de RAM, o build do painel fica lento. |
-| `SEED_DEMO` | vazio | Data de referência dos dados de demonstração (`AAAA-MM-DD`). |
+| `web` | O painel (Next.js), que a gente abre no navegador | 80 |
+| `api` | A API em PHP, que guarda e confere os dados | 8090 |
+| `db` | O banco MySQL | só a API acessa |
 
-Para apagar a máquina (os dados do banco também são apagados):
+O arquivo [`docker-compose.yml`](docker-compose.yml) diz como essas 3 partes sobem juntas.
 
-```bash
-aws ec2 terminate-instances --region us-east-2 --instance-ids <id-da-instância>
-```
+### Como publicar
 
-> **Atenção:** a URL da API é gravada no build do painel. Se a máquina for parada e iniciada de novo, o IP público muda e o painel para de encontrar a API. Nesse caso, é preciso criar uma máquina nova com o script ou associar um Elastic IP para manter o endereço fixo.
+Tudo é feito pelo script [`deploy/aws-ec2.sh`](deploy/aws-ec2.sh). Ele cria o computador na AWS, instala o Docker, baixa este repositório do GitHub e liga o sistema. Leva uns 5 minutos.
+
+1. Instale a [AWS CLI](https://docs.aws.amazon.com/cli/) e configure sua chave de acesso com `aws configure`.
+2. Confira se as mudanças já estão na `main` do GitHub, porque é de lá que o script baixa o código.
+3. Rode:
+
+   ```bash
+   ./deploy/aws-ec2.sh                         # sistema vazio, só com o admin
+   SEED_DEMO=2026-11-26 ./deploy/aws-ec2.sh    # com os dados de demonstração
+   ```
+
+4. No final, o script mostra o endereço do sistema e o comando para apagar a máquina.
+
+> **Cuidado:** não desligue e religue a máquina pelo site da AWS. O endereço muda e o painel para de funcionar. Se precisar, rode o script de novo para criar uma máquina nova.
 
 ## Telas (ordem do menu lateral)
 
