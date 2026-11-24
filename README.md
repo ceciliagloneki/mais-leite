@@ -172,38 +172,6 @@ aws ec2 terminate-instances --region us-east-2 --instance-ids <id-da-instância>
 
 > **Atenção:** a URL da API é gravada no build do painel. Se a máquina for parada e iniciada de novo, o IP público muda e o painel para de encontrar a API. Nesse caso, é preciso criar uma máquina nova com o script ou associar um Elastic IP para manter o endereço fixo.
 
-### Alternativa: Railway e Vercel
-
-Também é possível publicar a API e o banco no Railway e o painel na Vercel.
-
-#### Backend no Railway
-
-O backend tem um `Dockerfile`. Ao iniciar, ele cria as tabelas e o usuário admin, depois sobe a API.
-
-1. No [Railway](https://railway.com), crie um projeto com **Deploy from GitHub repo** e escolha este repositório.
-2. No serviço criado, vá em **Settings → Root Directory** e coloque `mais-leite-backend`.
-3. No projeto, adicione um banco com **+ Create → Database → MySQL**.
-4. No serviço da API, em **Variables**, crie:
-
-   | Variável | Valor |
-   | --- | --- |
-   | `DB_HOST` | `${{MySQL.MYSQLHOST}}` |
-   | `DB_PORT` | `${{MySQL.MYSQLPORT}}` |
-   | `DB_NAME` | `${{MySQL.MYSQLDATABASE}}` |
-   | `DB_USER` | `${{MySQL.MYSQLUSER}}` |
-   | `DB_PASSWORD` | `${{MySQL.MYSQLPASSWORD}}` |
-   | `APP_SECRET` | um texto grande e aleatório |
-   | `FRONTEND_URL` | a URL do frontend na Vercel (sem `/` no final) |
-
-5. Em **Settings → Networking**, clique em **Generate Domain**. Essa é a URL da API.
-
-#### Frontend na Vercel
-
-1. Na Vercel, importe este repositório.
-2. Em **Root Directory**, escolha `mais-leite-frontend`. O framework é detectado como Next.js.
-3. Em **Environment Variables**, crie `NEXT_PUBLIC_API_URL` com a URL da API gerada no Railway.
-4. Clique em **Deploy**.
-
 ## Telas (ordem do menu lateral)
 
 | Tela | O que faz | Regra principal |
@@ -216,7 +184,3 @@ O backend tem um `Dockerfile`. Ao iniciar, ele cria as tabelas e o usuário admi
 | 6. Preparação | Frasco destinado a cada RN | Tipo C/T/M do frasco igual ao prescrito |
 | 7. Distribuição | Ficha de distribuição, baixa (administração) e devolução de frascos | Caixa térmica de 200/250/300/350 mL; recebidos ≤ enviados |
 | Rastreabilidade | Caminho de cada frasco: doadora e sorologia → coleta → recepção → pasteurização → reenvase e análise → bebê | — |
-
-## Fluxo de desenvolvimento
-
-O projeto segue o padrão da Fábrica de Projetos: branches `main` (versão estável), `develop` (em desenvolvimento) e `feature/*` (uma por funcionalidade), com commits no formato `tipo: descrição` (`feat`, `fix`, `refactor`, `docs`, `test`, `chore`).
