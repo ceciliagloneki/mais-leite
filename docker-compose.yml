@@ -1,0 +1,48 @@
+# Sobe o +Leite inteiro numa máquina só: MySQL + API + painel.
+# Uso: PUBLIC_HOST=<ip-ou-dominio> APP_SECRET=<chave> DB_PASSWORD=<senha> docker compose up -d --build
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: mais_leite
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build: ./mais-leite-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: mais_leite
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_SECRET: ${APP_SECRET:?defina APP_SECRET}
+      FRONTEND_URL: http://${PUBLIC_HOST:?defina PUBLIC_HOST}
+    ports:
+      - "8090:8090"
+
+  web:
+    build:
+      context: ./mais-leite-frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://${PUBLIC_HOST}:8090
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:3000"
+
+volumes:
+  db_data:
