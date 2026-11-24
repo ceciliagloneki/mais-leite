@@ -1,5 +1,3 @@
-# Sobe o +Leite inteiro numa máquina só: MySQL + API + painel.
-# Uso: PUBLIC_HOST=<ip-ou-dominio> APP_SECRET=<chave> DB_PASSWORD=<senha> docker compose up -d --build
 services:
   db:
     image: mysql:8.0

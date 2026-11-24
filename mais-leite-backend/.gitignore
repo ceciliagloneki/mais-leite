@@ -1,19 +1,14 @@
-# Composer
 /vendor/
 composer.phar
 
-# Environment
 .env
 
-# IDE
 .vscode/
 .idea/
 
-# Sistema operacional
 .DS_Store
 Thumbs.db
 
-# Postman/Insomnia
 .postman/
 postman/
 !docs/postman/
