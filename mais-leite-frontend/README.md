@@ -7,7 +7,6 @@ Painel do Banco de Leite Humano de Marília. Consome a API PHP da pasta `mais-le
 - Next.js 14 (App Router) + React 18 + TypeScript
 - Tailwind CSS com design tokens (HSL) em `app/globals.css`
 - TanStack Query para os dados da API
-- Vitest para testes
 
 ## Como rodar
 
@@ -22,7 +21,6 @@ npm run dev                  # http://localhost:3000
 | `npm run dev`       | Servidor de desenvolvimento                 |
 | `npm run build`     | Build de produção (também confere os tipos) |
 | `npm run typecheck` | Confere os tipos (TypeScript)               |
-| `npm run test`      | Testes (Vitest)                             |
 | `npm run format`    | Formata o código (Prettier)                 |
 
 ## Estrutura

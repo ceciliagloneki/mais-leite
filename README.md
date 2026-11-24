@@ -29,7 +29,7 @@ Documentação do backend:
 ## Tecnologias
 
 - **Backend:** PHP 8, MySQL, Composer
-- **Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS, TanStack Query, Vitest
+- **Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS, TanStack Query
 - **Infraestrutura:** Docker, Docker Compose, AWS EC2
 
 ## Como rodar
@@ -77,14 +77,6 @@ Entre com o usuário criado pelo seed:
 
 - **E-mail:** `admin@maisleite.local`
 - **Senha:** `MaisLeite@123`
-
-### Testes do frontend
-
-```bash
-cd mais-leite-frontend
-npm test            # testes com Vitest
-npm run typecheck   # checagem de tipos
-```
 
 ### Com Docker (tudo de uma vez)
 

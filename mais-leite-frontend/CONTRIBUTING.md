@@ -12,7 +12,7 @@ mexam em páginas diferentes sem conflito.
 3. Faça commits pequenos e descritivos (português):
    - `feat: lista de coletas domiciliares`
    - `fix: corrige contagem de doadoras ativas`
-4. Rode `npm run format`, `npm run typecheck` e `npm run test` antes de abrir o PR.
+4. Rode `npm run format` e `npm run typecheck` antes de abrir o PR.
 5. Abra um Pull Request para a `main` e peça revisão.
 
 Não faça push direto na `main`.
@@ -121,8 +121,3 @@ Sidebar fixo automaticamente.
 3. Adicione o item no menu em `lib/navigation.ts` (o `href` precisa bater com a
    rota da pasta). O Sidebar marca o item ativo sozinho.
 
-## Testes
-
-- Vitest + Testing Library. Coloque os testes ao lado do que testam ou em
-  `__tests__`.
-- Rode com `npm run test` (execução única).
