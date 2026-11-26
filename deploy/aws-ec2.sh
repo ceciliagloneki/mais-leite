@@ -90,6 +90,4 @@ echo "Pronto. Em ~5 minutos (instalação do Docker + build) o sistema estará e
 echo "  Painel: http://$IP"
 echo "  API:    http://$IP:8090"
 echo "Login: admin@maisleite.local / MaisLeite@123"
-echo "Para desligar: aws ec2 stop-instances --region $REGION --instance-ids $ID"
-echo "Para religar:  aws ec2 start-instances --region $REGION --instance-ids $ID (o IP muda)"
 echo "Para apagar tudo: aws ec2 terminate-instances --region $REGION --instance-ids $ID"
