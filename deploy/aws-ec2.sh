@@ -25,14 +25,41 @@ fi
 APP_SECRET=$(openssl rand -hex 32)
 DB_PASSWORD=$(openssl rand -hex 16)
 
+# O user-data roda em todo boot (scripts-user always): na primeira vez instala tudo;
+# nas seguintes, se o IP público mudou (stop/start), atualiza o .env e refaz o build do painel.
 USER_DATA=$(cat <<SCRIPT
+Content-Type: multipart/mixed; boundary="//"
+MIME-Version: 1.0
+
+--//
+Content-Type: text/cloud-config; charset="us-ascii"
+
+#cloud-config
+cloud_final_modules:
+- [scripts-user, always]
+
+--//
+Content-Type: text/x-shellscript; charset="us-ascii"
+
 #!/bin/bash
 set -e
+TOKEN=\$(curl -s -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 60')
+PUBLIC_HOST=\$(curl -s -H "X-aws-ec2-metadata-token: \$TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+
+if [ -d /opt/mais-leite ]; then
+  swapon /swapfile 2>/dev/null || true
+  cd /opt/mais-leite
+  if ! grep -q "^PUBLIC_HOST=\$PUBLIC_HOST\$" .env; then
+    sed -i "s/^PUBLIC_HOST=.*/PUBLIC_HOST=\$PUBLIC_HOST/" .env
+    docker compose up -d --build
+  fi
+  exit 0
+fi
+
 fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
 curl -fsSL https://get.docker.com | sh
 git clone $REPO /opt/mais-leite
 cd /opt/mais-leite
-PUBLIC_HOST=\$(curl -s -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' | xargs -I{} curl -s -H 'X-aws-ec2-metadata-token: {}' http://169.254.169.254/latest/meta-data/public-ipv4)
 cat > .env <<ENV
 PUBLIC_HOST=\$PUBLIC_HOST
 APP_SECRET=$APP_SECRET
@@ -43,6 +70,7 @@ if [ -n "$SEED_DEMO" ]; then
   until curl -s -o /dev/null http://localhost:8090/; do sleep 3; done
   docker compose exec -T api php scripts/seed_demo.php $SEED_DEMO
 fi
+--//--
 SCRIPT
 )
 
@@ -62,4 +90,6 @@ echo "Pronto. Em ~5 minutos (instalação do Docker + build) o sistema estará e
 echo "  Painel: http://$IP"
 echo "  API:    http://$IP:8090"
 echo "Login: admin@maisleite.local / MaisLeite@123"
+echo "Para desligar: aws ec2 stop-instances --region $REGION --instance-ids $ID"
+echo "Para religar:  aws ec2 start-instances --region $REGION --instance-ids $ID (o IP muda)"
 echo "Para apagar tudo: aws ec2 terminate-instances --region $REGION --instance-ids $ID"

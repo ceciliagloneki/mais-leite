@@ -96,8 +96,8 @@ docker compose exec api php scripts/seed_demo.php 2026-11-26
 
 O sistema está no ar na AWS (serviço de nuvem da Amazon):
 
-- **Painel:** http://52.15.60.95
-- **API:** http://52.15.60.95:8090
+- **Painel:** http://3.15.0.88
+- **API:** http://3.15.0.88:8090
 
 Ele já tem os dados de demonstração para a apresentação de 26/11/2026. O login é o mesmo de [Acesso](#4-acesso).
 
@@ -128,7 +128,20 @@ Tudo é feito pelo script [`deploy/aws-ec2.sh`](deploy/aws-ec2.sh). Ele cria o c
 
 4. No final, o script mostra o endereço do sistema e o comando para apagar a máquina.
 
-> **Cuidado:** não desligue e religue a máquina pelo site da AWS. O endereço muda e o painel para de funcionar. Se precisar, rode o script de novo para criar uma máquina nova.
+### Desligar e religar
+
+A máquina só é cobrada enquanto está ligada (o disco é cobrado sempre, mas é barato). Para desligar e religar:
+
+```bash
+aws ec2 stop-instances  --region us-east-2 --instance-ids i-072ff8b5bce7bbddb
+aws ec2 start-instances --region us-east-2 --instance-ids i-072ff8b5bce7bbddb
+```
+
+> **Atenção:** cada vez que a máquina religa, ela ganha um **endereço (IP) novo**. Ela mesma percebe a troca e refaz o painel com o endereço novo, o que leva uns 5 minutos. Os dados do banco continuam lá. Para ver o endereço novo:
+>
+> ```bash
+> aws ec2 describe-instances --region us-east-2 --instance-ids i-072ff8b5bce7bbddb --query 'Reservations[0].Instances[0].PublicIpAddress' --output text
+> ```
 
 ## Telas (ordem do menu lateral)
 
